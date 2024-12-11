@@ -16,24 +16,7 @@ MAX_LEN = 10
 BDWIDTH_REGS = {
      '_measure_data' : 22,
      
-    '_zmco'   : 0x00,
-    '_zpos_hi' : 0x01,
-     '_zpos_lo' : 0x02,
-     '_mpos_hi' : 0x03,
-     '_mpos_lo' : 0x04,
-     '_mang_hi' : 0x05,
-     '_mang_lo' : 0x06,
-     '_conf_hi' : 0x07,
-     '_conf_lo' : 0x08,
-     '_raw_ang_hi' : 0x0c,
-     '_raw_ang_lo' : 0x0d,
-     '_ang_hi' : 0x0e,
-     '_ang_lo' : 0x0f,
-    
-     '_agc' : 0x1a,
-     '_mag_hi' : 0x1b,
-     '_mag_lo' : 0x1c,
-     '_burn' : 0xff
+
 }
 
 
@@ -173,7 +156,7 @@ class BDWidthMotionSensor:
             self.usb.write('G01;'.encode())
             self.bdw_data = self.usb.readline().decode('ascii').strip()
         if "i2c" == self.port: 
-            self.bdw_data = self.read_register('_measure_data', 20)
+            self.bdw_data = self.read_register('_measure_data', 15)
         if self.is_log == True:
             self.gcode.respond_info("port:%s, measure data:%s" % (self.port,self.bdw_data))
         if len(self.bdw_data) > 8:
