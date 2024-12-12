@@ -2,7 +2,7 @@
 bdwidth sensor is a optical width and motion sensor for 3D printer.
 
 > [!TIP]
-> with the width and motion data of the filament, then we can adjust the flow rate in real time
+> with the width and motion data of the filament, we can adjust the flow rate in real time
 > 
 > and pause the printer if the filament jams and runout
 
