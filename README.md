@@ -7,17 +7,19 @@ bdwidth sensor is a optical width and motion sensor for 3D printer.
 > and pause the printer if the filament jams and runout
 
 
-### 1.Plug the bdwidth sensor into the USB port or I2C port on the 3D printer mainboard 
+## Quick start
+
+#### 1.Plug the bdwidth sensor into the USB port or I2C port on the 3D printer mainboard 
 
 
-### 2.Install bdwidth Klipper module
+#### 2.Install software module
 ```
 cd  ~
 git clone https://github.com/markniu/bdwidth.git
 ~/bdwidth/klipper/install.sh
 ```
 
-### 3.Configure Klipper
+#### 3.Configure Klipper
 
 add the following section into your klipper config file,
 
