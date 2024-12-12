@@ -5,8 +5,8 @@ bdwidth sensor is a optical width and motion sensor for 3D filament.
 ### 1.Install bdwidth Klipper module
 ```
 cd  ~
-git clone https://github.com/markniu/Bed_Distance_sensor.git
-~/bdwidth/klipper/install_bdwidth.sh
+git clone https://github.com/markniu/bdwidth.git
+~/bdwidth/klipper/install.sh
 ```
 
 ### 2.Configure Klipper

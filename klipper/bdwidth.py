@@ -10,12 +10,12 @@ MEASUREMENT_INTERVAL_MM = 10
 
 CHECK_RUNOUT_TIMEOUT = 1.0
 TIMER_READ_ANGLE = 0.5
-BDWIDTH_CHIP_ADDR = 0x06
+BDWIDTH_CHIP_ADDR = 3
 BDWIDTH_I2C_SPEED = 100000
 MAX_LEN = 10
 BDWIDTH_REGS = {
-     '_measure_data' : 22,
-     
+     '_measure_data' : 0x16,
+     'get_measure_data':0x15,
 
 }
 
@@ -94,7 +94,7 @@ class BDWidthMotionSensor:
         self.runout_dia_max=config.getfloat('runout_max_diameter', 1.9)
         self.read_interval=config.getfloat('read_interval', 1.0) # in second
         self.is_log =config.getboolean('logging', False)
-        
+        self.raw_width = 0
         self.lastFilamentWidthReading = 0
         self.lastMotionReading = 0
         self.actual_total_move = 0
@@ -152,22 +152,32 @@ class BDWidthMotionSensor:
     def Read_bdwidth(self):
          
         self.bdw_data = ''
+        buffer = bytearray()
         if "usb" == self.port:
-            self.usb.write('G01;'.encode())
-            self.bdw_data = self.usb.readline().decode('ascii').strip()
-        if "i2c" == self.port: 
-            self.bdw_data = self.read_register('_measure_data', 15)
-        if self.is_log == True:
-            self.gcode.respond_info("port:%s, measure data:%s" % (self.port,self.bdw_data))
-        if len(self.bdw_data) > 8:
-            self.lastFilamentWidthReading = int(self.bdw_data.split(';')[0].split(':')[1]) * 0.00525
-            self.lastMotionReading = int(self.bdw_data.split(';')[1].split(':')[1])
+            if self.usb.is_open:     
+                self.usb.write('G01;'.encode())
+                while True:
+                    data = self.usb.read(self.usb.in_waiting)
+                    if data:
+                        for byte in data:
+                            buffer.append(byte)
+                        break              
+                
+        elif "i2c" == self.port: 
+            buffer = self.read_register('_measure_data', 5)
+        if len(buffer) >= 5 and '\n' in buffer:
+            self.raw_width = ((buffer[1] << 8) + buffer[0])&0xffff
+            self.lastMotionReading = ((buffer[3] << 8) + buffer[2])&0xffff
+            self.lastFilamentWidthReading = self.raw_width*0.00525
             self.actual_total_move = self.actual_total_move + self.lastMotionReading
         else:
+            self.gcode.respond_info("read error")
             return 1
+            
+        if self.is_log == True:
+            self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,self.raw_width,self.motion))
         
-        #if self.is_log == True:
-        #   self.gcode.respond_info("width:%.4fmm, Motion:%d" % (self.lastFilamentWidthReading,self.lastMotionReading))    
+            
         return 0
     def extrude_factor_update_event(self, eventtime):
         if self.is_active == False:     

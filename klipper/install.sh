@@ -18,7 +18,7 @@ if [ ! -d "$HOME_DIR" ] ; then
     echo ""
     echo "bdwidth sensor path: "$BDDIR""
     echo ""
-    echo "usage example:./install_bdwidth.sh /home/pi  or ./install_bdwidth.sh /home/mks "
+    echo "usage example:./install.sh /home/pi  or ./install.sh /home/mks "
     echo "Error!!"
     exit 1
 fi
