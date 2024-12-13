@@ -15,44 +15,8 @@ BDWIDTH_I2C_SPEED = 100000
 MAX_LEN = 10
 BDWIDTH_REGS = {
      '_measure_data' : 0x16,
-     'get_measure_data':0x15,
 
 }
-
-
-#[bdwidth]
-##i2c_software_scl_pin:PB10
-##i2c_software_sda_pin:PB11
-#port:usb
-#serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
-#extruder:extruder
-#detection_length : 4.0
-#pause_on_runout: True
-#read_interval:1
-#  in seconds
-#measurement_delay: 70
-#   The distance from sensor to the melting chamber/hot-end in
-#   millimeters (mm). The filament between the sensor and the hot-end
-#   will be treated as the default_nominal_filament_diameter. Host
-#   module works with FIFO logic. It keeps each sensor value and
-#   position in an array and POP them back in correct position. This
-#   parameter must be provided.
-
-#default_nominal_filament_diameter: 1.75 # (mm)
-#   Maximum allowed filament diameter difference as mm.
-#max_difference: 0.05
-#enable: False
-#   Sensor enabled or disabled after power on. The default is to
-#   disable.
-#min_diameter: 1.0
-#   Minimal diameter for trigger virtual filament_switch_sensor.
-#max_diameter:
-#   Maximum diameter for triggering virtual filament_switch_sensor.
-#   The default is default_nominal_filament_diameter + max_difference.
-#logging: False
-#   Out diameter to terminal and klipper.log can be turn on|of by
-#   command.
-
 
 class BDWidthMotionSensor:
     def __init__(self, config):
