@@ -9,7 +9,7 @@ bdwidth sensor is a optical width and motion sensor for 3D printer.
 
 ## Quick start
 
-#### 1.Plug the bdwidth sensor into the USB port or I2C port on the 3D printer mainboard 
+#### 1.Plug the bdwidth sensor into the USB port or I2C port(it can be any two gpios) on the 3D printer mainboard 
 
 
 #### 2.Install software module
