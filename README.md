@@ -27,12 +27,12 @@ here we connect the bdwidth to the usb port
 
 ```
 [bdwidth]
-port:i2c
+port:usb
 #   usb or i2c 
-i2c_software_scl_pin:PB10
-i2c_software_sda_pin:PB11
+#i2c_software_scl_pin:PB10
+#i2c_software_sda_pin:PB11
 #   needed if the port is i2c
-#serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
+serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 #   needed if the port is usb
 extruder:extruder
 detection_length : 4.0
