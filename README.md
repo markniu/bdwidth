@@ -17,17 +17,17 @@ here we connect the bdwidth to the usb port
 
 ```
 [bdwidth]
-port:usb
+port:i2c
 #   usb or i2c 
-#i2c_software_scl_pin:PB10  
-#i2c_software_sda_pin:PB11
+i2c_software_scl_pin:PB10
+i2c_software_sda_pin:PB11
 #   needed if the port is i2c
-serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
+#serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 #   needed if the port is usb
 extruder:extruder
 detection_length : 4.0
 pause_on_runout: True
-read_interval:1
+read_interval:0.3
 #  in seconds
 measurement_delay: 70
 #   The distance from sensor to the melting chamber/hot-end in
@@ -43,12 +43,12 @@ max_difference: 0.5
 enable: True
 #   Sensor enabled or disabled after power on. The default is to
 #   disable.
-min_diameter: 1.0
+runout_min_diameter: 1.0
 #   Minimal diameter for trigger virtual filament_switch_sensor.
-max_diameter: 1.9
+runout_max_diameter: 1.9
 #   Maximum diameter for triggering virtual filament_switch_sensor.
 #   The default is default_nominal_filament_diameter + max_difference.
-logging: False
+logging: True
 #   Out diameter to terminal and klipper.log can be turn on|of by
 #   command.
 ```

@@ -165,17 +165,19 @@ class BDWidthMotionSensor:
                 
         elif "i2c" == self.port: 
             buffer = self.read_register('_measure_data', 5)
-        if len(buffer) >= 5 and '\n' in buffer:
+        if len(buffer) >= 5 and b'\x0a' in buffer:
             self.raw_width = ((buffer[1] << 8) + buffer[0])&0xffff
             self.lastMotionReading = ((buffer[3] << 8) + buffer[2])&0xffff
             self.lastFilamentWidthReading = self.raw_width*0.00525
             self.actual_total_move = self.actual_total_move + self.lastMotionReading
         else:
+            for i in buffer:
+                self.gcode.respond_info("%d,"%i)
             self.gcode.respond_info("read error")
-            return 1
+            return 0
             
         if self.is_log == True:
-            self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,self.raw_width,self.motion))
+            self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,self.raw_width,self.lastMotionReading))
         
             
         return 0
