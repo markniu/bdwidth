@@ -11,7 +11,6 @@ fi
 BDDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 
-
 if [ ! -d "$HOME_DIR" ] ; then
     echo ""
     echo "path error doesn't exist in "$HOME_DIR""
