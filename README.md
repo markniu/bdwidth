@@ -16,6 +16,7 @@ bdwidth sensor is a optical width and motion sensor for 3D printer.
 ```
 cd  ~
 git clone https://github.com/markniu/bdwidth.git
+chmod 777 ~/bdwidth/klipper/install.sh
 ~/bdwidth/klipper/install.sh
 ```
 
