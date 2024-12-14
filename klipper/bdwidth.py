@@ -42,20 +42,13 @@ class BDWidthMotionSensor:
 
         self.nominal_filament_dia = config.getfloat(
             'default_nominal_filament_diameter', above=1.0)
-        self.measurement_delay = config.getfloat('measurement_delay', above=0.)
-        self.measurement_max_difference = config.getfloat('max_difference',
-                                                          above=0.)
-        self.max_diameter = (self.nominal_filament_dia
-                             + self.measurement_max_difference)
-        self.min_diameter = (self.nominal_filament_dia
-                             - self.measurement_max_difference)
- 
-        self.detection_length = config.getfloat(
-            'detection_length', 7., above=0.)
+        self.sensor_to_nozzle_length = config.getfloat('sensor_to_nozzle_length', above=0.)
+   
+        self.runout_delay_length = config.getfloat('runout_delay_length', 7., above=0.)
 
         self.is_active =config.getboolean('enable', False)    
-        self.runout_dia_min=config.getfloat('runout_min_diameter', 1.0)
-        self.runout_dia_max=config.getfloat('runout_max_diameter', 1.9)
+        self.min_diameter=config.getfloat('min_diameter', 1.0)
+        self.max_diameter=config.getfloat('max_diameter', 1.9)
         self.read_interval=config.getfloat('read_interval', 1.0) # in second
         self.is_log =config.getboolean('logging', False)
         self.raw_width = 0
@@ -66,7 +59,8 @@ class BDWidthMotionSensor:
         # Register commands and event handlers
         self.printer.register_event_handler('klippy:ready',
                                             self._handle_ready)
-
+        self.printer.register_event_handler("klippy:shutdown", self._shutdown)
+        
         self.printer.register_event_handler('idle_timeout:ready',
                                             self._handle_not_printing)
         self.printer.register_event_handler('idle_timeout:idle',
@@ -99,17 +93,17 @@ class BDWidthMotionSensor:
             # reading position
             next_reading_position = (self.filament_array[-1][0]
                                      + MEASUREMENT_INTERVAL_MM)
-            if next_reading_position <= (last_epos + self.measurement_delay):
-                self.filament_array.append([last_epos + self.measurement_delay,
+            if next_reading_position <= (last_epos + self.sensor_to_nozzle_length):
+                self.filament_array.append([last_epos + self.sensor_to_nozzle_length,
                                             self.lastFilamentWidthReading])
                 if self.is_log == True:
                     self.gcode.respond_info("self.lastFilamentWidthReading:%.3f" % (self.lastFilamentWidthReading))                             
         else:
             # add first item to array
-            self.filament_array.append([self.measurement_delay + last_epos,
+            self.filament_array.append([self.sensor_to_nozzle_length + last_epos,
                                         self.lastFilamentWidthReading])
-            if self.is_log == True:
-                self.gcode.respond_info("add first item to array.lastFilamentWidthReading:%.3f" % (self.lastFilamentWidthReading))                             
+            #if self.is_log == True:
+             #   self.gcode.respond_info("add first item to array.lastFilamentWidthReading:%.3f" % (self.lastFilamentWidthReading))                             
 
 
     #W:0310;M:-005;
@@ -132,16 +126,19 @@ class BDWidthMotionSensor:
         if len(buffer) >= 5 and b'\x0a' in buffer:
             self.raw_width = ((buffer[1] << 8) + buffer[0])&0xffff
             self.lastMotionReading = ((buffer[3] << 8) + buffer[2])&0xffff
+            if self.lastMotionReading>32767 :
+                self.lastMotionReading = self.lastMotionReading - 65535
             self.lastFilamentWidthReading = self.raw_width*0.00525
             self.actual_total_move = self.actual_total_move + self.lastMotionReading
         else:
             for i in buffer:
-                self.gcode.respond_info("%d,"%i)
-            self.gcode.respond_info("read error")
+                self.gcode.respond_info("%d"%i)
+            self.gcode.respond_info("bdwidth sensor read data error")
             return 0
             
-        if self.is_log == True:
-            self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,self.raw_width,self.lastMotionReading))
+        #if self.is_log == True:
+        #    self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
+        #                                         self.raw_width,self.lastMotionReading))
         
             
         return 0
@@ -162,7 +159,8 @@ class BDWidthMotionSensor:
             # Does filament exists
            # if self.is_log == True:
             #    self.gcode.respond_info(" width:%.4fmm, pending_position:%f,last_epos:%f" % (self.lastFilamentWidthReading,self.filament_array[0][0],last_epos))
-            if self.lastFilamentWidthReading > 0.5:
+            if self.lastFilamentWidthReading >= self.min_diameter and self.lastFilamentWidthReading <= self.max_diameter:
+                self.runout_helper.note_filament_present(True)
                 if len(self.filament_array) > 0:
                     # Get first position in filament array
                     pending_position = self.filament_array[0][0]
@@ -175,28 +173,37 @@ class BDWidthMotionSensor:
                             percentage = round(self.nominal_filament_dia**2
                                                / filament_width**2 * 100,2)
                             self.gcode.run_script("M221 S" + str(percentage))
-                            self.gcode.respond_info("M221 S:%.3f  filament_width:%.3f" %  (percentage,filament_width))
+                            if self.is_log == True:
+                                self.gcode.respond_info("M221 S:%.3f ; filament_width:%.3f" %  (percentage,filament_width))
                         else:
                             self.gcode.run_script("M221 S100")
             else:
+                if self.is_log == True:
+                    self.gcode.respond_info("filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!!"%(self.lastFilamentWidthReading,
+                                                                           self.min_diameter,self.max_diameter))
+                self.runout_helper.note_filament_present(False)
                 self.gcode.run_script("M221 S100")
                 self.filament_array = []
 
             # motion process
             if self.lastMotionReading!=0:
+                self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
+                                                 self.raw_width,self.lastMotionReading))
                 self._update_filament_runout_pos(eventtime)
             else:
+                
                 extruder_pos = self._get_extruder_pos(eventtime)
                 #self.gcode.respond_info("epos:%0.1f filament_runout_pos:%0.1f,actual_total_move:%d" % (extruder_pos, 
                 #                            self.filament_runout_pos,self.actual_total_move))
                 # Check for filament runout
-                if extruder_pos > self.filament_runout_pos+0.1:
-                    self.gcode.respond_info("rounout Emotor:%0.1f filament:%0.1f,motion:%d" % (extruder_pos, 
+                if extruder_pos > self.filament_runout_pos:
+                    if self.is_log == True:
+                        self.gcode.respond_info("rounout Emotor:%0.1f filament:%0.1f,motion:%d" % (extruder_pos, 
                                                     self.filament_runout_pos,self.actual_total_move))
                     self.runout_helper.note_filament_present(False)
-                    return
-                self.runout_helper.note_filament_present(True)
-                self._update_filament_runout_pos(eventtime)  
+                    self._update_filament_runout_pos(eventtime) 
+                
+              #  self._update_filament_runout_pos(eventtime)  
         else:
             return eventtime + 10
 
@@ -229,7 +236,7 @@ class BDWidthMotionSensor:
             eventtime = self.reactor.monotonic()
         self.filament_runout_pos = (
                 self._get_extruder_pos(eventtime) +
-                self.detection_length)
+                self.runout_delay_length)
     def _handle_ready(self):
         
         self.toolhead = self.printer.lookup_object('toolhead')
@@ -241,9 +248,9 @@ class BDWidthMotionSensor:
         self.reactor.update_timer(self.extrude_factor_update_timer,  # width sensor
                                   self.reactor.NOW)        
 
-
-        
-
+    def _shutdown(self):
+        self.reactor.update_timer(self.extrude_factor_update_timer,  
+                                  self.reactor.NEVER)      
     def _handle_not_printing(self, print_time):
 
         return
@@ -260,7 +267,8 @@ class BDWidthMotionSensor:
         response = ""
         if self.lastFilamentWidthReading > 0:
             response += ("Filament dia (measured mm): "
-                         + str(self.lastFilamentWidthReading))
+                         + str(self.lastFilamentWidthReading)
+                         +" Motion:" + str(self.lastMotionReading))
         else:
             response += "Filament NOT present"
         gcmd.respond_info(response)
@@ -284,23 +292,20 @@ class BDWidthMotionSensor:
 
     def cmd_M406(self, gcmd):
         response = "Filament width sensor Turned Off"
-        if not self.is_active:
-            response = "Filament width sensor is already Off"
-        else:
-            self.is_active = False
-            # Stop extrude factor update timer
-            self.reactor.update_timer(self.extrude_factor_update_timer,
-                                      self.reactor.NEVER)
-            # Clear filament array
-            self.filament_array = []
-            # Set extrude multiplier to 100%
-            self.gcode.run_script_from_command("M221 S100")
+        self.is_active = False
+        # Stop extrude factor update timer
+        self.reactor.update_timer(self.extrude_factor_update_timer,
+                                  self.reactor.NEVER)
+        # Clear filament array
+        self.filament_array = []
+        # Set extrude multiplier to 100%
+        self.gcode.run_script_from_command("M221 S100")
         gcmd.respond_info(response)
         
     def get_status(self, eventtime):
-        return {'Diameter': self.diameter,
-                'Raw':(self.lastFilamentWidthReading+
-                 self.lastFilamentWidthReading2),
+        return {'Diameter': self.self.lastFilamentWidthReading,
+                'Raw':self.raw_width,
+                'Motion':self.lastMotionReading,
                 'is_active':self.is_active}
                 
     def cmd_log_enable(self, gcmd):
