@@ -35,21 +35,7 @@ port:usb
 #   needed if the port is i2c
 serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 #   needed if the port is usb
-extruder:extruder
-runout_delay_length : 4.0
-pause_on_runout: True
-read_interval:0.3
-#  in seconds
-sensor_to_nozzle_length: 70
-#   The distance from sensor to the melting chamber/hot-end in
-#   millimeters (mm). The filament between the sensor and the hot-end
-#   will be treated as the default_nominal_filament_diameter. Host
-#   module works with FIFO logic. It keeps each sensor value and
-#   position in an array and POP them back in correct position. This
-#   parameter must be provided.
-
 default_nominal_filament_diameter: 1.75 # (mm)
-
 enable: True
 #   Sensor enabled or disabled after power on. The default is to
 #   disable.
@@ -58,9 +44,19 @@ min_diameter: 1.0
 max_diameter: 1.9
 #   Maximum allowed diameter for flow rate adjust and runout.
 #   The default is default_nominal_filament_diameter + max_difference.
-logging: True
-#   Out diameter to terminal and klipper.log can be turn on|of by
-#   command.
+extruder:extruder
+runout_delay_length : 4.0  # (mm)
+flowrate_adjust_length : 5  # (mm)
+pause_on_runout: True
+sample_time:2
+#  in seconds
+sensor_to_nozzle_length: 70
+#   The distance from sensor to the melting chamber/hot-end in
+#   millimeters (mm). The filament between the sensor and the hot-end
+#   will be treated as the default_nominal_filament_diameter. Host
+#   module works with FIFO logic. It keeps each sensor value and
+#   position in an array and POP them back in correct position. This
+#   parameter must be provided.
 
 
 ```
