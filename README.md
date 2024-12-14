@@ -36,9 +36,13 @@ port:usb
 serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 #   needed if the port is usb
 default_nominal_filament_diameter: 1.75 # (mm)
-enable: True
-#   Sensor enabled or disabled after power on. The default is to
-#   disable.
+enable: all
+#  disable or enable the sensor after power on.
+#   the value should be one of width/motion/all/disable 
+#   width(only enable the width function)
+#   motion(only enable the motion function)
+#   all(enable both the width and motion)
+#   disable(disable both the width and motion)
 min_diameter: 1.0
 #   Minimal allowed diameter for flow rate adjust and runout.
 max_diameter: 1.9
@@ -57,6 +61,12 @@ sensor_to_nozzle_length: 70
 #   module works with FIFO logic. It keeps each sensor value and
 #   position in an array and POP them back in correct position. This
 #   parameter must be provided.
+
+
+logging: True
+#   Out diameter to terminal and klipper.log can be turn on|of by
+#   command.
+
 
 
 ```
