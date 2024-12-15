@@ -110,13 +110,11 @@ class BDWidthMotionSensor:
         buffer = bytearray()
         if "usb" == self.port:
             if self.usb.is_open:
-                self.usb.write('G01;'.encode())
-                while True:
-                    data = self.usb.read(self.usb.in_waiting)
-                    if data:
-                        for byte in data:
-                            buffer.append(byte)
-                        break
+                self.usb.write('\n'.encode())
+                data = self.usb.read(5)
+                if data:
+                    for byte in data:
+                        buffer.append(byte)
         elif "i2c" == self.port: 
             buffer = self.read_register('_measure_data', 5)
         if len(buffer) >= 5 and b'\x0a' in buffer:
@@ -131,9 +129,9 @@ class BDWidthMotionSensor:
                 self.gcode.respond_info("%d"%i)
             self.gcode.respond_info("bdwidth sensor read data error")
             return False
-        if self.is_log == True:
-            self.gcode.respond_info("bdwidth, port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
-                                                 self.raw_width,self.lastMotionReading))          
+        #if self.is_log == True:
+        #    self.gcode.respond_info("bdwidth, port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
+         #                                        self.raw_width,self.lastMotionReading))          
         return True
 
 
@@ -202,7 +200,6 @@ class BDWidthMotionSensor:
             return eventtime + self.sample_time
             
         if self.Read_bdwidth() == True:
-            self.gcode.respond_info("self.is_active:%s" %  (self.is_active))
             if 'width' in self.is_active or 'all' in self.is_active:
                 self.width_process(eventtime)
             if 'motion' in self.is_active or 'all' in self.is_active:    
