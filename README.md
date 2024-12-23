@@ -2,18 +2,21 @@
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
 We have developed a unique algorithm that automatically compensates for the filament shadow on the CCD sensor as the filament moves at different heights and angles
 
-1. Adjust the flow rate in real time
+1. Flow rate adjust:  adjust the flow rate in real time
 
-2. Pause the printer while jam or runout (Built-in one laser motion sensor chip PAT9125)
+2. Jam/Runout: Pause the printer while jam or runout (laser motion sensor chip PAT9125)
  
-3. Width accuracy: +/- 0.015mm (Built-in one high resolution 0.005mm ccd sensor chip TCD1254)
+3. Width Accuracy: +/- 0.015mm (high resolution 0.005mm ccd sensor chip TCD1254)
  
 4. Connection: USB or I2C
 
-5. No Need to do calibration
+5. No calibration required
 
-> [!NOTE]
-> Transparent filament: It cannot measure the width of fully transparent filaments, but it can still measure movement. This means that the jam and runout detection functions still work
+6. firmware update from the usb
+
+Note:
+It works well for all kind of filaments, except the transparent filaments,
+Because it cannot measure the width of fully transparent filaments with the latest firmware(it seems it's possible to do that in the firmware in the feature), but it can still measure movement. This means that the jam and runout detection functions still work
 
 
 ## Quick start
