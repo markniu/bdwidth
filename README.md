@@ -2,6 +2,8 @@
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
 We have developed a unique algorithm that automatically compensates for the filament shadow on the CCD sensor as the filament moves at different heights and angles
 
+<img  width="550"  src="https://static.wixstatic.com/media/0d0edf_c629a3dc3247411ab5ef9aaa07266a86~mv2.jpg/v1/fill/w_1172,h_670,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_c629a3dc3247411ab5ef9aaa07266a86~mv2.jpg"/>
+
 1. Flow rate adjust:  adjust the flow rate in real time
 
 2. Jam/Runout: Pause the printer while jam or runout (laser motion sensor chip)
