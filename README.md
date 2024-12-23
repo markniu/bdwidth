@@ -4,9 +4,9 @@ We have developed a unique algorithm that automatically compensates for the fila
 
 1. Flow rate adjust:  adjust the flow rate in real time
 
-2. Jam/Runout: Pause the printer while jam or runout (laser motion sensor chip PAT9125)
+2. Jam/Runout: Pause the printer while jam or runout (laser motion sensor chip)
  
-3. Width Accuracy: +/- 0.015mm (high resolution 0.005mm ccd sensor chip TCD1254)
+3. Width Accuracy: +/- 0.015mm (high resolution 0.005mm ccd sensor chip)
  
 4. Connection: USB or I2C
 
