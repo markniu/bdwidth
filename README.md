@@ -1,5 +1,5 @@
 # bdwidth
-bdwidth sensor is a optical width and motion sensor for 3D printer.
+bdwidth sensor is an optical width and motion sensor for 3D printer.
 
 > [!TIP]
 > Adjust the flow rate in real time
@@ -74,3 +74,6 @@ logging: True
 
 
 ```
+Where to buy: [https://www.pandapi3d.com/product-page/bdwidth-sensor](https://www.pandapi3d.com/product-page/bdwidth-sensor)
+
+
