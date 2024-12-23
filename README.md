@@ -10,6 +10,9 @@ bdwidth sensor is an optical width and motion sensor for 3D printer.
 > 
 > Connection: USB or I2C
 
+> [!NOTE]
+> Transparent filament: It cannot measure the width of fully transparent filaments, but it can still measure movement. This means that the jam and runout detection functions still work
+
 
 ## Quick start
 
@@ -74,6 +77,7 @@ logging: True
 
 
 ```
-Where to buy: [https://www.pandapi3d.com/product-page/bdwidth-sensor](https://www.pandapi3d.com/product-page/bdwidth-sensor)
+
+#### Where to buy: [https://www.pandapi3d.com/product-page/bdwidth-sensor](https://www.pandapi3d.com/product-page/bdwidth-sensor)
 
 
