@@ -1,6 +1,6 @@
 # bdwidth
-bdwidth sensor is an optical width and motion sensor for 3D printer.
-
+#### bdwidth sensor is an optical width and motion sensor for 3D printer.
+We have developed a unique algorithm that automatically compensates for the filament shadow on the CCD sensor as the filament moves at different heights and angles
 
 1. Adjust the flow rate in real time
 
@@ -10,7 +10,7 @@ bdwidth sensor is an optical width and motion sensor for 3D printer.
  
 4. Connection: USB or I2C
 
-5. No Need to Calibration
+5. No Need to do calibration
 
 > [!NOTE]
 > Transparent filament: It cannot measure the width of fully transparent filaments, but it can still measure movement. This means that the jam and runout detection functions still work
