@@ -111,6 +111,7 @@ class BDWidthMotionSensor:
         if "usb" == self.port:
             if self.usb.is_open:
                 self.usb.write('\n'.encode())
+                self.usb.timeout = 0.01
                 data = self.usb.read(5)
                 if data:
                     for byte in data:
@@ -135,11 +136,8 @@ class BDWidthMotionSensor:
         return True
 
 
-    def width_process(self,eventtime):
-    # width process Update extrude factor
-        last_epos = self.toolhead.get_position()[3]
-        # Update filament array for lastFilamentWidthReading
-        self.update_filament_array(last_epos)
+    def width_process(self,eventtime,last_epos):
+    # width process Update extrude factor      
         # Check runout
         self.runout_helper.note_filament_present(True)
         # Does filament exists
@@ -176,8 +174,8 @@ class BDWidthMotionSensor:
     def motion_process(self,eventtime):
          # motion process
         if self.lastMotionReading!=0:
-            self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
-                                             self.raw_width,self.lastMotionReading))
+         #   self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
+         #                                    self.raw_width,self.lastMotionReading))
             self._update_filament_runout_pos(eventtime)
         else:
             
@@ -200,8 +198,11 @@ class BDWidthMotionSensor:
             return eventtime + self.sample_time
             
         if self.Read_bdwidth() == True:
+            last_epos = self.toolhead.get_position()[3]
+            # Update filament array for lastFilamentWidthReading
+            self.update_filament_array(last_epos)
             if 'width' in self.is_active or 'all' in self.is_active:
-                self.width_process(eventtime)
+                self.width_process(eventtime,last_epos)
             if 'motion' in self.is_active or 'all' in self.is_active:    
                 self.motion_process(eventtime) 
            
@@ -288,14 +289,10 @@ class BDWidthMotionSensor:
         self.gcode.run_script_from_command("M221 S100")
 
     def cmd_M405(self, gcmd):
-        response = "Filament width sensor Turned On"
-        if self.is_active:
-            response = "Filament width sensor is already On"
-        else:
-            self.is_active = True
-            # Start extrude factor update timer
-            self.reactor.update_timer(self.extrude_factor_update_timer,
-                                      self.reactor.NOW)
+        cmd_bd = gcmd.get('enable', None)
+        if cmd_bd is not None:
+            self.is_active = cmd_bd
+        response = "bdwidth sensor status:" + self.is_active
         gcmd.respond_info(response)
 
     def cmd_M406(self, gcmd):
