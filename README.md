@@ -14,7 +14,9 @@ We have developed a unique algorithm that can automatically compensates for the 
 
 5. No calibration required
 
-6. firmware update from the usb
+6. firmware update from the usb (Only needs updating when we release a new bdwidth.hex)
+   
+7. No mechanical contact with the filament, no wear due to the use of optical components
 
 Note:
 It works well for all kind of filaments, except the transparent filaments,
