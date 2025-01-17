@@ -65,12 +65,12 @@ max_diameter: 1.9
 #   Maximum allowed diameter for flow rate adjust and runout.
 #   The default is default_nominal_filament_diameter + max_difference.
 extruder:extruder
-runout_delay_length : 4.0  # (mm)
+runout_delay_length : 8.0  # (mm)
 flowrate_adjust_length : 5  # (mm)
 pause_on_runout: True
 sample_time:2
 #  in seconds
-sensor_to_nozzle_length: 70
+sensor_to_nozzle_length: 700
 #   The distance from sensor to the melting chamber/hot-end in
 #   millimeters (mm). The filament between the sensor and the hot-end
 #   will be treated as the default_nominal_filament_diameter. Host
