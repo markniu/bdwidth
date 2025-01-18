@@ -46,8 +46,8 @@ here we connect the bdwidth to the usb port
 [bdwidth]
 port:usb
 #   usb or i2c 
-#i2c_software_scl_pin:PB10
-#i2c_software_sda_pin:PB11
+#i2c_software_scl_pin:PA8
+#i2c_software_sda_pin:PA14
 #   needed if the port is i2c
 serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 #   needed if the port is usb
