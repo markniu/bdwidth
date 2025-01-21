@@ -18,9 +18,6 @@ We have developed a unique algorithm that can automatically compensates for the 
    
 7. No mechanical contact with the filament, no wear due to the use of optical components
 
-Note:
-It works well for all kind of filaments, except the transparent filaments,
-Because it cannot measure the width of fully transparent filaments with the latest firmware(it seems it's possible to do that in the firmware in the feature), but it can still measure movement. This means that the jam and runout detection functions still work
 
 
 ## Quick start
