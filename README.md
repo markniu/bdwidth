@@ -2,7 +2,7 @@
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
 We have developed a unique algorithm that can automatically compensates for the filament shadow on the CCD sensor even if the filament moves at different distance and angles.
 
-<img  width="550"  src="https://static.wixstatic.com/media/0d0edf_c629a3dc3247411ab5ef9aaa07266a86~mv2.jpg/v1/fill/w_1172,h_670,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_c629a3dc3247411ab5ef9aaa07266a86~mv2.jpg"/>
+<img  width="550"  src="https://static.wixstatic.com/media/0d0edf_54bec8b6d2c345c9acff65f798d85c5d~mv2.jpg/v1/fill/w_1374,h_802,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_54bec8b6d2c345c9acff65f798d85c5d~mv2.jpg"/>
 
 1. Flow rate adjust:  adjust the flow rate in real time
 
@@ -18,9 +18,6 @@ We have developed a unique algorithm that can automatically compensates for the 
    
 7. No mechanical contact with the filament, no wear due to the use of optical components
 
-Note:
-It works well for all kind of filaments, except the transparent filaments,
-Because it cannot measure the width of fully transparent filaments with the latest firmware(it seems it's possible to do that in the firmware in the feature), but it can still measure movement. This means that the jam and runout detection functions still work
 
 
 ## Quick start
@@ -46,8 +43,8 @@ here we connect the bdwidth to the usb port
 [bdwidth]
 port:usb
 #   usb or i2c 
-#i2c_software_scl_pin:PB10
-#i2c_software_sda_pin:PB11
+#i2c_software_scl_pin:PA8
+#i2c_software_sda_pin:PA14
 #   needed if the port is i2c
 serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 #   needed if the port is usb
@@ -61,16 +58,16 @@ enable: all
 #   disable(disable both the width and motion)
 min_diameter: 1.0
 #   Minimal allowed diameter for flow rate adjust and runout.
-max_diameter: 1.9
+max_diameter: 2.0
 #   Maximum allowed diameter for flow rate adjust and runout.
 #   The default is default_nominal_filament_diameter + max_difference.
 extruder:extruder
-runout_delay_length : 4.0  # (mm)
+runout_delay_length : 8.0  # (mm)
 flowrate_adjust_length : 5  # (mm)
 pause_on_runout: True
 sample_time:2
 #  in seconds
-sensor_to_nozzle_length: 70
+sensor_to_nozzle_length: 750
 #   The distance from sensor to the melting chamber/hot-end in
 #   millimeters (mm). The filament between the sensor and the hot-end
 #   will be treated as the default_nominal_filament_diameter. Host
