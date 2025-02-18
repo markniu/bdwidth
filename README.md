@@ -85,6 +85,6 @@ logging: True
 ```
 
 #### My store: [https://www.pandapi3d.com](https://www.pandapi3d.com)
-#### [Test Video1](https://www.youtube.com/watch?v=vu5LtXh5HZw)  , [Test Video2](https://www.youtube.com/watch?v=vu5LtXh5HZw) 
+#### [Test Video1](https://www.youtube.com/watch?v=Cj5bzoDzowE)  , [Test Video2](https://www.youtube.com/watch?v=vu5LtXh5HZw) 
 
 
