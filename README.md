@@ -84,6 +84,7 @@ logging: True
 
 ```
 
-#### Where to buy: [https://www.pandapi3d.com/product-page/bdwidth-sensor](https://www.pandapi3d.com/product-page/bdwidth-sensor)
+#### My store: [https://www.pandapi3d.com](https://www.pandapi3d.com)
+#### [Test Video1](https://www.youtube.com/watch?v=vu5LtXh5HZw)  , [Test Video2](https://www.youtube.com/watch?v=vu5LtXh5HZw) 
 
 
