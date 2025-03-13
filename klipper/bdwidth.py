@@ -29,8 +29,12 @@ class BDWidthMotionSensor:
             self.usb = serial.Serial(self.usb_port, baudrate,timeout=1)
         self.gcode = self.printer.lookup_object('gcode')
         self.extruder_name = config.get('extruder')
-         
-        self.runout_helper = filament_switch_sensor.RunoutHelper(config)
+        self.check_on_print_start = config.getboolean(
+            "check_on_print_start", False)
+        try: 
+            self.runout_helper = filament_switch_sensor.RunoutHelper(config)
+        except Exception as e:
+            self.runout_helper = filament_switch_sensor.RunoutHelper(config,self)
         self.get_status = self.runout_helper.get_status
         self.extruder = None
         self.estimated_print_time = None
@@ -306,6 +310,13 @@ class BDWidthMotionSensor:
         # Set extrude multiplier to 100%
         self.gcode.run_script_from_command("M221 S100")
         gcmd.respond_info(response)
+        
+    def sensor_get_status(self, eventtime):
+        return {
+            "runout_distance": float(self.runout_helper.runout_distance),
+            "runout_elapsed": float(self.runout_helper.runout_elapsed),
+            "check_on_print_start": bool(self.check_on_print_start),
+        }      
         
     def get_status(self, eventtime):
         return {'Diameter': self.self.lastFilamentWidthReading,
