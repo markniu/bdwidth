@@ -86,7 +86,7 @@ logging: True
 
 
 ```
-
+#### Wiki:https://pandapi3d.cn/
 #### My store: [https://www.pandapi3d.com](https://www.pandapi3d.com)
 #### [Test Video1](https://www.youtube.com/watch?v=Cj5bzoDzowE)  , [Test Video2](https://www.youtube.com/watch?v=vu5LtXh5HZw) 
 
