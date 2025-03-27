@@ -143,13 +143,13 @@ class BDWidthMotionSensor:
     def width_process(self,eventtime,last_epos):
     # width process Update extrude factor      
         # Check runout
-        self.runout_helper.note_filament_present(True)
+        self.runout_helper.note_filament_present(eventtime, True)
         # Does filament exists
        # if self.is_log == True:
         #    self.gcode.respond_info(" width:%.4fmm, pending_position:%f,last_epos:%f" % (self.lastFilamentWidthReading,self.filament_array[0][0],last_epos))
         if self.lastFilamentWidthReading >= self.min_diameter and self.lastFilamentWidthReading <= self.max_diameter:
             self.filament_present = True
-            self.runout_helper.note_filament_present(True)
+            self.runout_helper.note_filament_present(eventtime,True)
             if len(self.filament_array) > 0:
                 # Get first position in filament array
                 pending_position = self.filament_array[0][0]
@@ -171,7 +171,7 @@ class BDWidthMotionSensor:
                 self.gcode.respond_info("filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!!"%(self.lastFilamentWidthReading,
                                                                        self.min_diameter,self.max_diameter))
                 self.filament_present = False                                                       
-            self.runout_helper.note_filament_present(False)
+            self.runout_helper.note_filament_present(eventtime, False)
             self.gcode.run_script("M221 S100")
             self.filament_array = []
 
@@ -191,7 +191,7 @@ class BDWidthMotionSensor:
                 if self.is_log == True:
                     self.gcode.respond_info("rounout Emotor:%0.1f filament:%0.1f,motion:%d" % (extruder_pos, 
                                                 self.filament_runout_pos,self.actual_total_move))
-                self.runout_helper.note_filament_present(False)
+                self.runout_helper.note_filament_present(eventtime, False)
                 self._update_filament_runout_pos(eventtime) 
             
           #  self._update_filament_runout_pos(eventtime)  
