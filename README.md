@@ -1,6 +1,6 @@
 # bdwidth
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
-We have developed a unique algorithm that can automatically compensates for the filament shadow on the CCD sensor even if the filament moves at different distance and angles.
+I developed a unique algorithm that uses light diffraction to automatically compensate for filament shadows on the CCD sensor, even when the filament moves at different distances and angles, we still can get the right width.
 
   Just power it, then you can measure your filament motion&diameter.  
  
