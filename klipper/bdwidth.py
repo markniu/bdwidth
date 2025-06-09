@@ -187,7 +187,7 @@ class BDWidthMotionSensor:
             #self.gcode.respond_info("epos:%0.1f filament_runout_pos:%0.1f,actual_total_move:%d" % (extruder_pos, 
             #                            self.filament_runout_pos,self.actual_total_move))
             # Check for filament runout
-            if extruder_pos > self.filament_runout_pos:
+            if extruder_pos > (self.filament_runout_pos-5):
                 if self.is_log == True:
                     self.gcode.respond_info("rounout Emotor:%0.1f filament:%0.1f,motion:%d" % (extruder_pos, 
                                                 self.filament_runout_pos,self.actual_total_move))
@@ -284,7 +284,7 @@ class BDWidthMotionSensor:
                          +" Motion:" + str(self.lastMotionReading))
         else:
             response += " Filament NOT present"
-        gcmd.respond_info(response)
+        gcmd.respond_info(response+":"+ self.is_active )
 
     def cmd_ClearFilamentArray(self, gcmd):
         self.filament_array = []
@@ -293,15 +293,18 @@ class BDWidthMotionSensor:
         self.gcode.run_script_from_command("M221 S100")
 
     def cmd_M405(self, gcmd):
-        cmd_bd = gcmd.get('enable', None)
-        if cmd_bd is not None:
-            self.is_active = cmd_bd
+       # cmd_bd = gcmd.get('enable', None)
+      #  if cmd_bd is not None:
+      #      self.is_active = cmd_bd
+        self.is_active = 'all'
         response = "bdwidth sensor status:" + self.is_active
+        self.reactor.update_timer(self.extrude_factor_update_timer,  # width sensor
+                                  self.reactor.NOW)   
         gcmd.respond_info(response)
 
     def cmd_M406(self, gcmd):
         response = "Filament width sensor Turned Off"
-        self.is_active = False
+        self.is_active = 'disable'
         # Stop extrude factor update timer
         self.reactor.update_timer(self.extrude_factor_update_timer,
                                   self.reactor.NEVER)
