@@ -143,13 +143,22 @@ class BDWidthMotionSensor:
     def width_process(self,eventtime,last_epos):
     # width process Update extrude factor      
         # Check runout
-        self.runout_helper.note_filament_present(eventtime, True)
+        try:
+            self.runout_helper.note_filament_present(eventtime, True)
+        except Exception as e:
+            self.runout_helper.note_filament_present(True)
+            pass
+        
         # Does filament exists
        # if self.is_log == True:
         #    self.gcode.respond_info(" width:%.4fmm, pending_position:%f,last_epos:%f" % (self.lastFilamentWidthReading,self.filament_array[0][0],last_epos))
         if self.lastFilamentWidthReading >= self.min_diameter and self.lastFilamentWidthReading <= self.max_diameter:
             self.filament_present = True
-            self.runout_helper.note_filament_present(eventtime,True)
+            try:
+                self.runout_helper.note_filament_present(eventtime, True)
+            except Exception as e:
+                self.runout_helper.note_filament_present(True)
+                pass
             if len(self.filament_array) > 0:
                 # Get first position in filament array
                 pending_position = self.filament_array[0][0]
@@ -171,7 +180,13 @@ class BDWidthMotionSensor:
                 self.gcode.respond_info("filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!!"%(self.lastFilamentWidthReading,
                                                                        self.min_diameter,self.max_diameter))
                 self.filament_present = False                                                       
-            self.runout_helper.note_filament_present(eventtime, False)
+            #self.runout_helper.note_filament_present(eventtime, False)
+            try:
+                self.runout_helper.note_filament_present(eventtime, False)
+            except Exception as e:
+                self.runout_helper.note_filament_present(False)
+                pass
+            
             self.gcode.run_script("M221 S100")
             self.filament_array = []
 
@@ -191,7 +206,12 @@ class BDWidthMotionSensor:
                 if self.is_log == True:
                     self.gcode.respond_info("rounout Emotor:%0.1f filament:%0.1f,motion:%d" % (extruder_pos, 
                                                 self.filament_runout_pos,self.actual_total_move))
-                self.runout_helper.note_filament_present(eventtime, False)
+               # self.runout_helper.note_filament_present(eventtime, False)
+                try:
+                    self.runout_helper.note_filament_present(eventtime, False)
+                except Exception as e:
+                    self.runout_helper.note_filament_present(False)
+                    pass
                 self._update_filament_runout_pos(eventtime) 
             
           #  self._update_filament_runout_pos(eventtime)  
@@ -334,6 +354,26 @@ class BDWidthMotionSensor:
     def cmd_log_disable(self, gcmd):
         self.is_log = False
         gcmd.respond_info("Filament width logging Turned Off")
+    def cmd_bdwidth_screen_off(self, gcmd):
+        buffer = bytearray()
+        if "usb" == self.port:
+            if self.usb.is_open:
+                self.usb.write('\n'.encode())
+                self.usb.timeout = 0.01
+                data = self.usb.read(5)
+                if data:
+                    for byte in data:
+                        buffer.append(byte)
+        elif "i2c" == self.port: 
+            buffer = self.read_register('_measure_data', 5)
+
+    def cmd_bdwidth_screen_on(self, gcmd):
+        response = ""
+        if "usb" == self.port:
+            self.usb.write('G00;'.encode())
+            response += self.usb.readline().decode('ascii').strip()
+        elif "i2c" == self.port: 
+            response += self.read_register('_version', 15).decode('utf-8')
 
 def load_config(config):
     return BDWidthMotionSensor(config)
