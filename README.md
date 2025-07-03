@@ -1,4 +1,4 @@
-# bdwidth
+# Flow compensation sensor bdwidth
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
 I developed a unique algorithm that uses light diffraction to automatically compensate for filament shadows on the CCD sensor, even when the filament moves at different distances and angles, we still can get the right width.
 
@@ -7,7 +7,7 @@ I developed a unique algorithm that uses light diffraction to automatically comp
 
 <img  width="550"  src="https://static.wixstatic.com/media/0d0edf_54bec8b6d2c345c9acff65f798d85c5d~mv2.jpg/v1/fill/w_1374,h_802,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_54bec8b6d2c345c9acff65f798d85c5d~mv2.jpg"/>
 
-1. Flow rate adjust:  adjust the flow rate in real time
+1. Flow compensation:  adjust the flow rate in real time
 
 2. Jam/Runout: Pause the printer while jam or runout (laser optical tracking chip)
  
