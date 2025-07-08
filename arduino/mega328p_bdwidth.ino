@@ -11,7 +11,7 @@
 #include <Wire.h>
 #endif
 
-#define SDA_PIN 9
+#define SDA_PIN 11
 #define SCL_PIN 10
 
 #define sensor_addr 3
@@ -142,16 +142,22 @@ void loop(void) {
   
   // read bdwidth version
   readI2CRegister(sensor_addr, version_addr,data,15);
-  sprintf(tmp_1,"V:%s\n",data);
+  sprintf(tmp_1,"%s\n",data);
   u8g2.drawStr(0,10,tmp_1);
   // read width and motion data
   readI2CRegister(sensor_addr, width_addr,data,4);
-  int width = ((data[1] << 8) + data[0])&0xffff;
+ unsigned long width = ((data[1] << 8) + data[0])&0xffff;
   int motion = ((data[3] << 8) + data[2])&0xffff;
-  sprintf(tmp_1,"W:%d,M:%d\n",width*525,motion);
+  //sprintf(tmp_1,"W:%d,M:%d\n",width*525,motion);
+  width = width*525;
+	//sprintf(tmp_1,"W: %d.%d%d%d,M:%d",width/100000,(width%100000)/10000,(width%10000)/1000,(width%1000)/100,motion);
+  sprintf(tmp_1,"W: %d.",width/100000 );
+  sprintf(tmp_1+strlen(tmp_1),"%d",(width%100000)/10000);
+  sprintf(tmp_1+strlen(tmp_1),"%d",(width%10000)/1000);
+  sprintf(tmp_1+strlen(tmp_1),"%d mm",(width%1000)/100);
+  sprintf(tmp_1+strlen(tmp_1),"  M: %d",motion);
   u8g2.drawStr(0,30,tmp_1);
     
-
   
   delay(1000);  
   u8g2.sendBuffer();
