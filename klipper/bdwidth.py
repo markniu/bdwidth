@@ -2,6 +2,8 @@ import logging
 import math
 import statistics
 import serial
+import os
+
 
 from . import bus
 from . import filament_switch_sensor
@@ -19,7 +21,8 @@ class BDWidthMotionSensor:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
-        self.port = config.get("port")#
+        self.port = config.get("port")
+
         # if config.get("resistance1", None) is None:
         if "i2c" in self.port:  
             self.i2c = bus.MCU_I2C_from_config(config, BDWIDTH_CHIP_ADDR, BDWIDTH_I2C_SPEED)
@@ -52,14 +55,26 @@ class BDWidthMotionSensor:
 
         self.is_active =config.get('enable')    
         self.min_diameter=config.getfloat('min_diameter', 1.0)
+        self.linear_motion=config.getfloat('motion_linear_coefficient', 42.8)
         self.max_diameter=config.getfloat('max_diameter', 1.9)
         self.sample_time=config.getfloat('sample_time', 1.0) # in second
         self.is_log =config.getboolean('logging', False)
+        self.is_debug =config.getboolean('debug_info', False)
         self.raw_width = 0
         self.lastFilamentWidthReading = 0
         self.lastMotionReading = 0
         self.actual_total_move = 0
         self.filament_array = []
+        if self.is_log == True:
+        
+           # logging.basicConfig(handlers=[logging.FileHandler(filename=self.get_log_path()+"bdwidth.log", 
+            #                                     encoding='utf-8', mode='a+')],
+           #         format="%(asctime)s  %(message)s", 
+           #         datefmt="%F %A %T", 
+           #         level=logging.INFO)
+            self.logerb=self.get_logger(self.get_log_path()+"bdwidth.log.csv")
+                    
+
         # Register commands and event handlers
         self.printer.register_event_handler('klippy:ready',
                                             self._handle_ready)
@@ -85,11 +100,41 @@ class BDWidthMotionSensor:
                                         self.cmd_M406)
         self.gcode.register_command('ENABLE_FILAMENT_WIDTH_SENSOR',
                                         self.cmd_M405)
-        self.gcode.register_command('ENABLE_FILAMENT_WIDTH_LOG',
-                                    self.cmd_log_enable)
-        self.gcode.register_command('DISABLE_FILAMENT_WIDTH_LOG',
-                                    self.cmd_log_disable)
+        self.gcode.register_command('ENABLE_FILAMENT_WIDTH_INFO',
+                                    self.cmd_info_enable)
+        self.gcode.register_command('DISABLE_FILAMENT_WIDTH_INFO',
+                                    self.cmd_info_disable)
+    
+    def get_logger(self,name):
+        logger = logging.getLogger("2")
+        fh = logging.FileHandler(name, mode='a+', encoding='utf-8')
+        ch = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s,%(message)s',"%m/%d %H:%M:%S")
+        logger.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        return logger
 
+
+    def get_log_path(self):
+        #result=subprocess.run(["ps", "-ef"], check=True, text=True, capture_output=True)
+        os.system("ps -ef > /tmp/logd")
+        with open("/tmp/logd", "r") as f:
+            result = f.read()
+            result=str(result).split(" ")
+            for c_path in result:
+                if '/klippy.log' in c_path:
+               # folders['logs'] =  os.path.dirname(c_path) + '/'     
+                    return os.path.dirname(c_path) + '/'
+        return '/tmp/'
+
+    def log_file(self,mes_str):
+        if self.is_log == True:
+            self.logerb.info(mes_str)
+
+    
     def update_filament_array(self, last_epos):
         # Fill array
         if len(self.filament_array) > 0:
@@ -100,17 +145,18 @@ class BDWidthMotionSensor:
             if next_reading_position <= (last_epos + self.sensor_to_nozzle_length):
                 self.filament_array.append([last_epos + self.sensor_to_nozzle_length,
                                             self.lastFilamentWidthReading])
-                if self.is_log == True:
-                    self.gcode.respond_info("self.lastFilamentWidthReading:%.3f" % (self.lastFilamentWidthReading))                             
+                if self.is_debug == True:
+                    self.gcode.respond_info("Width:%.3f" % (self.lastFilamentWidthReading))                             
         else:
             # add first item to array
             self.filament_array.append([self.sensor_to_nozzle_length + last_epos,
                                         self.lastFilamentWidthReading])
-            #if self.is_log == True:
+            #if self.is_debug == True:
              #   self.gcode.respond_info("add first item to array.lastFilamentWidthReading:%.3f" % (self.lastFilamentWidthReading))                             
 
     def Read_bdwidth(self):
         self.bdw_data = ''
+         
         buffer = bytearray()
         if "usb" == self.port:
             if self.usb.is_open:
@@ -127,14 +173,18 @@ class BDWidthMotionSensor:
             self.lastMotionReading = ((buffer[3] << 8) + buffer[2])&0xffff
             if self.lastMotionReading>32767 :
                 self.lastMotionReading = self.lastMotionReading - 65535
+            self.lastMotionReading = -self.lastMotionReading # change the default dir
+            
             self.lastFilamentWidthReading = self.raw_width*0.00525
             self.actual_total_move = self.actual_total_move + self.lastMotionReading
+            if self.lastMotionReading !=0:
+                self.log_file(str(round(self.lastFilamentWidthReading,3))+'mm,'+str(round(self.actual_total_move/self.linear_motion,1))+'mm,'+str(self.actual_total_move))
         else:
             for i in buffer:
                 self.gcode.respond_info("%d"%i)
             self.gcode.respond_info("bdwidth sensor read data error")
             return False
-        #if self.is_log == True:
+        #if self.is_debug == True:
         #    self.gcode.respond_info("bdwidth, port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
          #                                        self.raw_width,self.lastMotionReading))          
         return True
@@ -150,7 +200,7 @@ class BDWidthMotionSensor:
             pass
         
         # Does filament exists
-       # if self.is_log == True:
+       # if self.is_debug == True:
         #    self.gcode.respond_info(" width:%.4fmm, pending_position:%f,last_epos:%f" % (self.lastFilamentWidthReading,self.filament_array[0][0],last_epos))
         if self.lastFilamentWidthReading >= self.min_diameter and self.lastFilamentWidthReading <= self.max_diameter:
             self.filament_present = True
@@ -171,12 +221,12 @@ class BDWidthMotionSensor:
                         percentage = round(self.nominal_filament_dia**2
                                            / filament_width**2 * 100,2)
                         self.gcode.run_script("M221 S" + str(percentage))
-                        if self.is_log == True:
-                            self.gcode.respond_info("M221 S:%.3f ; filament_width:%.3f" %  (percentage,filament_width))
+                        if self.is_debug == True:
+                            self.gcode.respond_info("M221 S:%.3f ; width:%.3f" %  (percentage,filament_width))
                     else:
                         self.gcode.run_script("M221 S100")
         else:
-            if self.is_log == True and self.filament_present == True:
+            if self.filament_present == True:
                 self.gcode.respond_info("filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!!"%(self.lastFilamentWidthReading,
                                                                        self.min_diameter,self.max_diameter))
                 self.filament_present = False                                                       
@@ -203,9 +253,9 @@ class BDWidthMotionSensor:
             #                            self.filament_runout_pos,self.actual_total_move))
             # Check for filament runout
             if extruder_pos > (self.filament_runout_pos-5):
-                if self.is_log == True:
-                    self.gcode.respond_info("rounout Emotor:%0.1f filament:%0.1f,motion:%d" % (extruder_pos, 
-                                                self.filament_runout_pos,self.actual_total_move))
+                self.gcode.respond_info("Rounout: because extruder_postion:%0.1f > filament_runout_pos:%0.1f, (actual_total_move:%d)" % (extruder_pos, 
+                                            self.filament_runout_pos,self.actual_total_move))
+                self.gcode.respond_info("If the trigger is incorrect, you can increase the runout_delay_length or check the flow rate in the gcode file")
                # self.runout_helper.note_filament_present(eventtime, False)
                 try:
                     self.runout_helper.note_filament_present(eventtime, False)
@@ -322,6 +372,7 @@ class BDWidthMotionSensor:
                                   self.reactor.NOW)   
         gcmd.respond_info(response)
 
+
     def cmd_M406(self, gcmd):
         response = "Filament width sensor Turned Off"
         self.is_active = 'disable'
@@ -347,13 +398,13 @@ class BDWidthMotionSensor:
                 'Motion':self.lastMotionReading,
                 'active':self.is_active}
                 
-    def cmd_log_enable(self, gcmd):
-        self.is_log = True
-        gcmd.respond_info("Filament width logging Turned On")
+    def cmd_info_enable(self, gcmd):
+        self.is_debug = True
+        gcmd.respond_info("Filament width debug inforamtion Turned On")
 
-    def cmd_log_disable(self, gcmd):
-        self.is_log = False
-        gcmd.respond_info("Filament width logging Turned Off")
+    def cmd_info_disable(self, gcmd):
+        self.is_debug = False
+        gcmd.respond_info("Filament width debug inforamtion Turned Off")
     def cmd_bdwidth_screen_off(self, gcmd):
         buffer = bytearray()
         if "usb" == self.port:
