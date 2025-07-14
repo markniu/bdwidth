@@ -45,7 +45,7 @@ here we connect the bdwidth to the usb port
 ```
 [bdwidth]
 port:usb
-#   usb or i2c 
+#   usb or i2c
 #i2c_software_scl_pin:PA8
 #i2c_software_sda_pin:PA14
 #   needed if the port is i2c
@@ -54,7 +54,7 @@ serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 default_nominal_filament_diameter: 1.75 # (mm)
 enable: all
 #  disable or enable the sensor after power on.
-#   the value should be one of width/motion/all/disable 
+#   the value should be one of width/motion/all/disable
 #   width(only enable the width function)
 #   motion(only enable the motion function)
 #   all(enable both the width and motion)
@@ -65,11 +65,13 @@ max_diameter: 2.0
 #   Maximum allowed diameter for flow rate adjust and runout.
 #   The default is default_nominal_filament_diameter + max_difference.
 extruder:extruder
-runout_delay_length : 8.0  # (mm)
+runout_delay_length : 8.0
+#    (mm) increase this value if the print speed is high or with high flowrate
+#    else it may trigger the runout and pause
 flowrate_adjust_length : 5  # (mm)
 pause_on_runout: True
 sample_time:2
-#  in seconds
+#  in seconds > 0.3s
 sensor_to_nozzle_length: 750
 #   The distance from sensor to the melting chamber/hot-end in
 #   millimeters (mm). The filament between the sensor and the hot-end
@@ -77,9 +79,16 @@ sensor_to_nozzle_length: 750
 #   module works with FIFO logic. It keeps each sensor value and
 #   position in an array and POP them back in correct position. This
 #   parameter must be provided.
+#   how to measure:https://github.com/markniu/bdwidth/blob/main/doc/lengthToNozzle.jpg
 
 
 logging: True
+#   Out data to the file bdwidth.log.csv,
+#   the data format: date time,diameter,total used filament,raw data of total used filament.
+#   for example:
+#   7/12 23:20:18,1.764mm,1462.5mm,62594
+
+debug_info: True
 #   Out diameter to terminal and klipper.log can be turn on|of by
 #   command.
 
