@@ -1,4 +1,8 @@
-# Flow compensation sensor bdwidth
+# Filament monitor Sensor bdwidth
+
+- Through the generated CSV file, we can intuitively see the diameter of the entire filament roll in the line chart in any position
+- Improve print quality with automatic flow rate adjustment and stability with the runout/clog feature.
+
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
 I developed a unique algorithm that uses light diffraction to automatically compensate for filament shadows on the CCD sensor, even when the filament moves at different distances and angles, we still can get the right width.
 
