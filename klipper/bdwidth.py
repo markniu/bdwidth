@@ -50,6 +50,7 @@ class BDWidthMotionSensor:
         self.sensor_to_nozzle_length = config.getfloat('sensor_to_nozzle_length', above=0.)
    
         self.runout_delay_length = config.getfloat('runout_delay_length', 7., above=0.)
+        self.tolerance_count = config.getfloat('tolerance_count', 2, above=1)
 
         self.flowrate_adjust_length = config.getfloat('flowrate_adjust_length', 5., above=1.)
 
@@ -65,6 +66,9 @@ class BDWidthMotionSensor:
         self.lastMotionReading = 0
         self.actual_total_move = 0
         self.filament_array = []
+        self.width_out_count = 0
+        self.runout_count = 0
+        
         if self.is_log == True:
         
            # logging.basicConfig(handlers=[logging.FileHandler(filename=self.get_log_path()+"bdwidth.log", 
@@ -208,6 +212,7 @@ class BDWidthMotionSensor:
         #    self.gcode.respond_info(" width:%.4fmm, pending_position:%f,last_epos:%f" % (self.lastFilamentWidthReading,self.filament_array[0][0],last_epos))
         if self.lastFilamentWidthReading >= self.min_diameter and self.lastFilamentWidthReading <= self.max_diameter:
             self.filament_present = True
+            self.width_out_count = 0
             try:
                 self.runout_helper.note_filament_present(eventtime, True)
             except Exception as e:
@@ -230,6 +235,9 @@ class BDWidthMotionSensor:
                     else:
                         self.gcode.run_script("M221 S100")
         else:
+            self.width_out_count=self.width_out_count+1
+            if self.width_out_count < self.tolerance_count:
+                return
             if self.filament_present == True:
                 self.gcode.respond_info("filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!!"%(self.lastFilamentWidthReading,
                                                                        self.min_diameter,self.max_diameter))
@@ -250,6 +258,7 @@ class BDWidthMotionSensor:
          #   self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
          #                                    self.raw_width,self.lastMotionReading))
             self._update_filament_runout_pos(eventtime)
+            self.runout_count = 0
         else:
             
             extruder_pos = self._get_extruder_pos(eventtime)
@@ -257,6 +266,9 @@ class BDWidthMotionSensor:
             #                            self.filament_runout_pos,self.actual_total_move))
             # Check for filament runout
             if extruder_pos > (self.filament_runout_pos-5):
+                self.runout_count = self.runout_count+1
+                if self.runout_count < self.tolerance_count:
+                    return
                 self.gcode.respond_info("Rounout: because extruder_postion:%0.1f > filament_runout_pos:%0.1f, (actual_total_move:%d)" % (extruder_pos, 
                                             self.filament_runout_pos,self.actual_total_move))
                 self.gcode.respond_info("If the trigger is incorrect, you can increase the runout_delay_length or check the flow rate in the gcode file")
