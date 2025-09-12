@@ -68,6 +68,12 @@ class BDWidthMotionSensor:
         self.filament_array = []
         self.width_out_count = 0
         self.runout_count = 0
+        # Register commands
+        self.bd_name = config.get_name().split()[1]
+        gcode = self.printer.lookup_object('gcode')
+        gcode.register_mux_command("SET_BDWIDTH", "NAME", self.bd_name,
+                                   self.cmd_SET_BDWIDTH,
+                                   desc=self.cmd_SET_BDWIDTH_help)
         
         if self.is_log == True:
         
@@ -76,7 +82,7 @@ class BDWidthMotionSensor:
            #         format="%(asctime)s  %(message)s", 
            #         datefmt="%F %A %T", 
            #         level=logging.INFO)
-            self.logerb=self.get_logger(self.get_log_path()+"bdwidth.log.csv")
+            self.logerb=self.get_logger(self.get_log_path()+"bdwidth_"+self.bd_name+".log.csv")
                     
 
         # Register commands and event handlers
@@ -97,18 +103,32 @@ class BDWidthMotionSensor:
         #self.reactor.update_timer(self.sample_timer, self.reactor.NOW)
         self.extruder_pos_old = 0
         self.angel_to_len_old = 0
-        self.gcode.register_command('QUERY_FILAMENT_WIDTH', self.cmd_M407)
-        self.gcode.register_command('RESET_FILAMENT_WIDTH_SENSOR',
-                                        self.cmd_ClearFilamentArray)
-        self.gcode.register_command('DISABLE_FILAMENT_WIDTH_SENSOR',
-                                        self.cmd_M406)
-        self.gcode.register_command('ENABLE_FILAMENT_WIDTH_SENSOR',
-                                        self.cmd_M405)
-        self.gcode.register_command('ENABLE_FILAMENT_WIDTH_INFO',
-                                    self.cmd_info_enable)
-        self.gcode.register_command('DISABLE_FILAMENT_WIDTH_INFO',
-                                    self.cmd_info_disable)
+        #self.gcode.register_command('QUERY_FILAMENT_WIDTH', self.cmd_M407)
+       # self.gcode.register_command('RESET_FILAMENT_WIDTH_SENSOR',
+       #                                 self.cmd_ClearFilamentArray)
+       # self.gcode.register_command('DISABLE_FILAMENT_WIDTH_SENSOR',
+       #                                 self.cmd_M406)
+       # self.gcode.register_command('ENABLE_FILAMENT_WIDTH_SENSOR',
+       #                                 self.cmd_M405)
+      #  self.gcode.register_command('ENABLE_FILAMENT_WIDTH_INFO',
+      #                              self.cmd_info_enable)
+      #  self.gcode.register_command('DISABLE_FILAMENT_WIDTH_INFO',
+      #                              self.cmd_info_disable)
+
+                                    
+
     
+    cmd_SET_BDWIDTH_help = "cmd for bdwidth sensor,SET_BDWIDTH NAME=xxx COMMAND=ENABLE/DISABLE/QUERY"
+    def cmd_SET_BDWIDTH(self, gcmd):
+        # Read requested value
+        cmd = gcmd.get('COMMAND')
+        self.gcode.respond_info("Send %s to bdsensor:%s"%(cmd,self.bd_name))
+        if 'ENABLE' in cmd:
+            self.cmd_enable(gcmd)
+        elif 'DISABLE' in cmd:  
+            self.cmd_disable(gcmd)
+        elif 'QUERY' in cmd:  
+            self.cmd_query(gcmd)  
     def get_logger(self,name):
         logger = logging.getLogger("2")
         fh = logging.FileHandler(name, mode='a+', encoding='utf-8')
@@ -152,7 +172,7 @@ class BDWidthMotionSensor:
                 self.filament_array.append([last_epos + self.sensor_to_nozzle_length,
                                             self.lastFilamentWidthReading])
                 if self.is_debug == True:
-                    self.gcode.respond_info("Width:%.3f" % (self.lastFilamentWidthReading))                             
+                    self.gcode.respond_info("bdsensor name:%s , Width:%.3f" % (self.bd_name,self.lastFilamentWidthReading))                             
         else:
             # add first item to array
             self.filament_array.append([self.sensor_to_nozzle_length + last_epos,
@@ -190,7 +210,7 @@ class BDWidthMotionSensor:
         else:
             for i in buffer:
                 self.gcode.respond_info("%d"%i)
-            self.gcode.respond_info("bdwidth sensor read data error")
+            self.gcode.respond_info("bdwidth sensor:%s read data error"%self.bd_name)
             return False
         #if self.is_debug == True:
         #    self.gcode.respond_info("bdwidth, port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
@@ -355,7 +375,7 @@ class BDWidthMotionSensor:
 
     
             
-    def cmd_M407(self, gcmd):
+    def cmd_query(self, gcmd):
         response = ""
         if "usb" == self.port:
             self.usb.write('G00;'.encode())
@@ -378,7 +398,7 @@ class BDWidthMotionSensor:
         # Set extrude multiplier to 100%
         self.gcode.run_script_from_command("M221 S100")
 
-    def cmd_M405(self, gcmd):
+    def cmd_enable(self, gcmd):
        # cmd_bd = gcmd.get('enable', None)
       #  if cmd_bd is not None:
       #      self.is_active = cmd_bd
@@ -389,8 +409,8 @@ class BDWidthMotionSensor:
         gcmd.respond_info(response)
 
 
-    def cmd_M406(self, gcmd):
-        response = "Filament width sensor Turned Off"
+    def cmd_disable(self, gcmd):
+        #response = "Filament width sensor Turned Off"
         self.is_active = 'disable'
         # Stop extrude factor update timer
         self.reactor.update_timer(self.extrude_factor_update_timer,
@@ -399,7 +419,7 @@ class BDWidthMotionSensor:
         self.filament_array = []
         # Set extrude multiplier to 100%
         self.gcode.run_script_from_command("M221 S100")
-        gcmd.respond_info(response)
+        gcmd.respond_info("Filament width sensor:%s Turned Off"%self.bd_name)
         
     def sensor_get_status(self, eventtime):
         return {
@@ -442,5 +462,5 @@ class BDWidthMotionSensor:
         elif "i2c" == self.port: 
             response += self.read_register('_version', 15).decode('utf-8')
 
-def load_config(config):
+def load_config_prefix(config):
     return BDWidthMotionSensor(config)
