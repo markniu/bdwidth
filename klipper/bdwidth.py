@@ -42,7 +42,7 @@ class BDWidthMotionSensor:
         self.extruder = None
         self.estimated_print_time = None
         # Initialise internal state
-        self.filament_runout_pos = None
+        self.filament_runout_pos = 0.0
         self.filament_present = True
         
         self.nominal_filament_dia = config.getfloat(
@@ -172,7 +172,7 @@ class BDWidthMotionSensor:
                 self.filament_array.append([last_epos + self.sensor_to_nozzle_length,
                                             self.lastFilamentWidthReading])
                 if self.is_debug == True:
-                    self.gcode.respond_info("bdsensor name:%s , Width:%.3f" % (self.bd_name,self.lastFilamentWidthReading))                             
+                    self.gcode.respond_info("%s , Width:%.3f" % (self.bd_name,self.lastFilamentWidthReading))                             
         else:
             # add first item to array
             self.filament_array.append([self.sensor_to_nozzle_length + last_epos,
@@ -210,7 +210,7 @@ class BDWidthMotionSensor:
         else:
             for i in buffer:
                 self.gcode.respond_info("%d"%i)
-            self.gcode.respond_info("bdwidth sensor:%s read data error"%self.bd_name)
+            self.gcode.respond_info("%s: read data error"%self.bd_name)
             return False
         #if self.is_debug == True:
         #    self.gcode.respond_info("bdwidth, port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
@@ -251,7 +251,7 @@ class BDWidthMotionSensor:
                                            / filament_width**2 * 100,2)
                         self.gcode.run_script("M221 S" + str(percentage))
                         if self.is_debug == True:
-                            self.gcode.respond_info("M221 S:%.3f ; width:%.3f" %  (percentage,filament_width))
+                            self.gcode.respond_info("M221 S:%.3f ; %s, width:%.3f" %  (percentage,self.bd_name,filament_width))
                     else:
                         self.gcode.run_script("M221 S100")
         else:
@@ -259,7 +259,7 @@ class BDWidthMotionSensor:
             if self.width_out_count < self.tolerance_count:
                 return
             if self.filament_present == True:
-                self.gcode.respond_info("filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!!"%(self.lastFilamentWidthReading,
+                self.gcode.respond_info("%s:filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!! pause"%(self.bd_name,self.lastFilamentWidthReading,
                                                                        self.min_diameter,self.max_diameter))
                 self.filament_present = False                                                       
             #self.runout_helper.note_filament_present(eventtime, False)
@@ -357,8 +357,8 @@ class BDWidthMotionSensor:
                 self.printer.lookup_object('mcu').estimated_print_time)
         self._update_filament_runout_pos()
         
-        self.reactor.update_timer(self.extrude_factor_update_timer,  # width sensor
-                                  self.reactor.NOW)        
+        #self.reactor.update_timer(self.extrude_factor_update_timer,  # width sensor
+        #                          self.reactor.NOW)        
 
     def _shutdown(self):
         self.reactor.update_timer(self.extrude_factor_update_timer,  
@@ -384,13 +384,13 @@ class BDWidthMotionSensor:
             response += self.read_register('_version', 15).decode('utf-8')
            
         
-        if self.lastFilamentWidthReading > 0:
-            response += (" Filament dia (measured mm): "
-                         + str(self.lastFilamentWidthReading)
-                         +" Motion:" + str(self.lastMotionReading))
-        else:
-            response += " Filament NOT present"
-        gcmd.respond_info(response+":"+ self.is_active )
+      #  if self.lastFilamentWidthReading > 0:
+      #      response += (" Filament dia (measured mm): "
+      #                   + str(self.lastFilamentWidthReading)
+      #                   +" Motion:" + str(self.lastMotionReading))
+       # else:
+       #     response += " Filament NOT present,"
+        gcmd.respond_info("active:"+ self.is_active+", motion:"+str(self.lastMotionReading)+",width:"+str(self.lastFilamentWidthReading) )
 
     def cmd_ClearFilamentArray(self, gcmd):
         self.filament_array = []
