@@ -47,9 +47,9 @@ add the following section into your klipper config file,
 here we connect the bdwidth to the usb port
 
 ```
-[bdwidth]
+[bdwidth fila_width_0]
 port:usb
-#   usb or i2c
+#   usb or i2c 
 #i2c_software_scl_pin:PA8
 #i2c_software_sda_pin:PA14
 #   needed if the port is i2c
@@ -58,7 +58,7 @@ serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 default_nominal_filament_diameter: 1.75 # (mm)
 enable: all
 #  disable or enable the sensor after power on.
-#   the value should be one of width/motion/all/disable
+#   the value should be one of width/motion/all/disable 
 #   width(only enable the width function)
 #   motion(only enable the motion function)
 #   all(enable both the width and motion)
@@ -69,13 +69,13 @@ max_diameter: 2.0
 #   Maximum allowed diameter for flow rate adjust and runout.
 #   The default is default_nominal_filament_diameter + max_difference.
 extruder:extruder
-runout_delay_length : 8.0
-#    (mm) increase this value if the print speed is high or with high flowrate
+runout_delay_length : 8.0  
+#    (mm) increase this value if the print speed is high or with high flowrate 
 #    else it may trigger the runout and pause
 flowrate_adjust_length : 5  # (mm)
 pause_on_runout: True
 sample_time:2
-#  in seconds > 0.3s
+#  in seconds, should be > 0.3s
 sensor_to_nozzle_length: 750
 #   The distance from sensor to the melting chamber/hot-end in
 #   millimeters (mm). The filament between the sensor and the hot-end
@@ -88,17 +88,35 @@ sensor_to_nozzle_length: 750
 
 logging: True
 #   Out data to the file bdwidth.log.csv,
-#   the data format: date time,diameter,total used filament,raw data of total used filament.
+#   the data format: date time,diameter,total used filament,raw data of total used filament. 
 #   for example:
 #   7/12 23:20:18,1.764mm,1462.5mm,62594
 
 debug_info: True
-#   Out diameter to terminal and klipper.log can be turn on|of by
-#   command.
+#   Output diameter to terminal/console and klipper.log 
 
 
 
 ```
+
+
+### 4. Gcode for bdwidth:
+```
+SET_BDWIDTH NAME=xxx COMMAND=ENABLE  ;enable the bdwidth 
+SET_BDWIDTH NAME=xxx COMMAND=DISABLE  ;disable the bdwidth 
+SET_BDWIDTH NAME=xxx COMMAND=QUERY    ;read one data from bdwidth
+```
+note: the `xxx` is the name of bdwidth in the section [bdwidth xxx]
+for example: [bdwidth fila_width_0] in the printer.cfg then we can run this command to enable it.
+```
+  SET_BDWIDTH NAME=fila_width_0 COMMAND=ENABLE
+```
+
+> The bdwidth is not enabled by default, we need to enable it with command, and Add the enable or disable command into the start G-code in the slicer.
+> for example:SET_BDWIDTH NAME=fila_width_0 COMMAND=ENABLE
+
+
+
 #### Wiki:https://pandapi3d.cn/
 #### My store: [https://www.pandapi3d.com](https://www.pandapi3d.com)
 #### [Test Video1](https://www.youtube.com/watch?v=Cj5bzoDzowE)  , [Test Video2](https://www.youtube.com/watch?v=vu5LtXh5HZw) 
