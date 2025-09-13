@@ -130,7 +130,7 @@ class BDWidthMotionSensor:
         elif 'QUERY' in cmd:  
             self.cmd_query(gcmd)  
     def get_logger(self,name):
-        logger = logging.getLogger("2")
+        logger = logging.getLogger(self.bd_name)
         fh = logging.FileHandler(name, mode='a+', encoding='utf-8')
         ch = logging.StreamHandler()
         formatter = logging.Formatter('%(asctime)s,%(message)s',"%m/%d %H:%M:%S")
