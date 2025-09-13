@@ -206,7 +206,7 @@ class BDWidthMotionSensor:
             if self.lastMotionReading !=0:
                 if self.is_debug == True:
                     self.gcode.respond_info(str(round(self.lastFilamentWidthReading,3))+'mm,'+str(round(self.actual_total_move/self.linear_motion,1))+'mm,'+str(self.actual_total_move))
-                self.log_file(str(round(self.lastFilamentWidthReading,3))+'mm,'+str(round(self.actual_total_move/self.linear_motion,1))+'mm,'+str(self.actual_total_move))
+                self.log_file(str(round(self.lastFilamentWidthReading,3))+','+str(round(self.actual_total_move/self.linear_motion,1))+'mm,'+str(self.actual_total_move))
         else:
             for i in buffer:
                 self.gcode.respond_info("%d"%i)
