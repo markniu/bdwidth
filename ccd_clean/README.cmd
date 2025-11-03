@@ -1,0 +1,12 @@
+
+This will help you to understand how CCD works and clean the glass of the CCD
+
+Connect the sensor to the PC and run the python file ccd_data.py(which in the github) as follow.
+for example:
+
+```
+C:\Users\admin>python D:\Github\bdwidth\ccd_clean\ccd_data.py com6 500000
+```
+The data graph should normally look like this:
+  
+<img  width="550"  src="https://private-user-images.githubusercontent.com/13879340/495448973-29072103-cc86-4595-8e41-16a939529cf6.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjIxMzUyMjgsIm5iZiI6MTc2MjEzNDkyOCwicGF0aCI6Ii8xMzg3OTM0MC80OTU0NDg5NzMtMjkwNzIxMDMtY2M4Ni00NTk1LThlNDEtMTZhOTM5NTI5Y2Y2LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTExMDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUxMTAzVDAxNTUyOFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWJkNzdiNjQzM2MwY2EzZmVhNGE0NzhkMmMxNDZkMDg0NmNmOWQwOTMwZDZlNGZjN2RlMjJjY2VkYTFjNzRkY2EmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.d2Z1jKoR6ZACLBkdZbX-kKZ9AQeQ6FE40-Eh5-zOkas"/>
