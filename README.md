@@ -120,5 +120,6 @@ for example: [bdwidth fila_width_0] in the printer.cfg then we can run this comm
 #### Wiki:https://pandapi3d.cn/
 #### My store: [https://www.pandapi3d.com](https://www.pandapi3d.com)
 #### [Test Video1](https://www.youtube.com/watch?v=Cj5bzoDzowE)  , [Test Video2](https://www.youtube.com/watch?v=vu5LtXh5HZw) 
+[Test Video3](https://www.tiktok.com/@plumpkatt1/video/7567149596976090381?is_from_webapp=1&sender_device=pc&web_id=7567204802599994898)
 
 
