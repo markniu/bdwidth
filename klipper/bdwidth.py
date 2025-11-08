@@ -403,6 +403,10 @@ class BDWidthMotionSensor:
       #  if cmd_bd is not None:
       #      self.is_active = cmd_bd
         self.is_active = 'all'
+        if 'MOTION' in cmd:
+            self.is_active = 'motion'
+        elif 'WIDTH' in cmd:
+            self.is_active = 'width'    
         response = "bdwidth sensor status:" + self.is_active
         self.reactor.update_timer(self.extrude_factor_update_timer,  # width sensor
                                   self.reactor.NOW)   
