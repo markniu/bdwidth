@@ -402,10 +402,12 @@ class BDWidthMotionSensor:
        # cmd_bd = gcmd.get('enable', None)
       #  if cmd_bd is not None:
       #      self.is_active = cmd_bd
+        cmd = gcmd.get('COMMAND')
+        gcmd.respond_info("cmd:"+cmd)
         self.is_active = 'all'
-        if 'MOTION' in gcmd:
+        if 'MOTION' in cmd:
             self.is_active = 'motion'
-        elif 'WIDTH' in gcmd:
+        elif 'WIDTH' in cmd:
             self.is_active = 'width'    
         response = "bdwidth sensor status:" + self.is_active
         self.reactor.update_timer(self.extrude_factor_update_timer,  # width sensor
