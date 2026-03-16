@@ -15,7 +15,7 @@ I developed a unique algorithm that uses light diffraction to automatically comp
 
 2. Jam/Runout: Pause the printer while jam or runout (laser optical tracking chip)
  
-3. Width Accuracy: +/- 0.01mm (high resolution 0.005mm CCD sensor chip)
+3. Width Accuracy: +/- 0.015mm (high resolution 0.005mm CCD sensor chip)
  
 4. Connection: USB or I2C, Low power 5V*49mA = 0.245W
 
