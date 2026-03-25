@@ -3,6 +3,7 @@
 - Through the generated CSV file, we can intuitively see the diameter of the entire filament roll in the line chart in any position
 - Improve print quality with automatic flow rate adjustment and stability with the runout/clog feature.
 
+
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
 I developed a unique algorithm that uses light diffraction to automatically compensate for filament shadows on the CCD sensor, even when the filament moves at different distances and angles, we still can get the right width.
 
@@ -25,7 +26,11 @@ I developed a unique algorithm that uses light diffraction to automatically comp
    
 7. No mechanical contact with the filament, no wear due to the use of optical components
 
+[flow adjust](https://static.wixstatic.com/media/0d0edf_dd1a7dbbf0d7433387d54fea9a8ac6f3~mv2.jpg/v1/fill/w_1486,h_753,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_dd1a7dbbf0d7433387d54fea9a8ac6f3~mv2.jpg)
 
+[filament actual used](https://static.wixstatic.com/media/0d0edf_f45dd0ee38ac41dd8bb5706e1e4dc5ea~mv2.jpg/v1/fill/w_1440,h_753,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_f45dd0ee38ac41dd8bb5706e1e4dc5ea~mv2.jpg)
+
+[width chart](https://static.wixstatic.com/media/0d0edf_18b3c14cc95a42f3876c291456ff140b~mv2.jpg/v1/fill/w_1330,h_753,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_18b3c14cc95a42f3876c291456ff140b~mv2.jpg)
 
 ## Quick start
 
