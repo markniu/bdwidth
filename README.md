@@ -59,7 +59,13 @@ port:usb
 #i2c_software_sda_pin:PA14
 #   needed if the port is i2c
 serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
+#serial:/dev/serial/by-path/YourByPathUUID
 #   needed if the port is usb
+# note: if you also have a bd_pressure , you must use  a serial: /dev/serial/by-path method.
+# uncomment the above by-path line and replace the "YourByPathUUID" with the UUID for the bd_width. See the bd_pressure repository for instruction for bd_pressure. 
+# It's best to start with both unplugged, then use command: ls /dev/serial/by-path and take note of the UUIDs with both unplugged.
+# Repeat the command again after plugging in bd_width. Take note of the UUID for it, then again repeat for bd_pressure.
+
 default_nominal_filament_diameter: 1.75 # (mm)
 enable: all
 #  disable or enable the sensor after power on.
