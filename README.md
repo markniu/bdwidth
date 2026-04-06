@@ -3,6 +3,7 @@
 - Through the generated CSV file, we can intuitively see the diameter of the entire filament roll in the line chart in any position
 - Improve print quality with automatic flow rate adjustment and stability with the runout/clog feature.
 
+
 #### bdwidth sensor is an optical width and motion sensor for 3D printer.
 I developed a unique algorithm that uses light diffraction to automatically compensate for filament shadows on the CCD sensor, even when the filament moves at different distances and angles, we still can get the right width.
 
@@ -15,7 +16,7 @@ I developed a unique algorithm that uses light diffraction to automatically comp
 
 2. Jam/Runout: Pause the printer while jam or runout (laser optical tracking chip)
  
-3. Width Accuracy: +/- 0.01mm (high resolution 0.005mm CCD sensor chip)
+3. Width Accuracy: +/- 0.015mm (high resolution 0.005mm CCD sensor chip)
  
 4. Connection: USB or I2C, Low power 5V*49mA = 0.245W
 
@@ -25,7 +26,11 @@ I developed a unique algorithm that uses light diffraction to automatically comp
    
 7. No mechanical contact with the filament, no wear due to the use of optical components
 
+[flow adjust](https://static.wixstatic.com/media/0d0edf_dd1a7dbbf0d7433387d54fea9a8ac6f3~mv2.jpg/v1/fill/w_1486,h_753,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_dd1a7dbbf0d7433387d54fea9a8ac6f3~mv2.jpg)
 
+[filament actual used](https://static.wixstatic.com/media/0d0edf_f45dd0ee38ac41dd8bb5706e1e4dc5ea~mv2.jpg/v1/fill/w_1440,h_753,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_f45dd0ee38ac41dd8bb5706e1e4dc5ea~mv2.jpg)
+
+[width chart](https://static.wixstatic.com/media/0d0edf_18b3c14cc95a42f3876c291456ff140b~mv2.jpg/v1/fill/w_1330,h_753,al_c,q_85,usm_0.66_1.00_0.01/0d0edf_18b3c14cc95a42f3876c291456ff140b~mv2.jpg)
 
 ## Quick start
 
@@ -54,7 +59,13 @@ port:usb
 #i2c_software_sda_pin:PA14
 #   needed if the port is i2c
 serial:/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
+#serial:/dev/serial/by-path/YourByPathUUID
 #   needed if the port is usb
+# note: if you also have a bd_pressure , you must use  a serial: /dev/serial/by-path method.
+# uncomment the above by-path line and replace the "YourByPathUUID" with the UUID for the bd_width. See the bd_pressure repository for instruction for bd_pressure. 
+# It's best to start with both unplugged, then use command: ls /dev/serial/by-path and take note of the UUIDs with both unplugged.
+# Repeat the command again after plugging in bd_width. Take note of the UUID for it, then again repeat for bd_pressure.
+
 default_nominal_filament_diameter: 1.75 # (mm)
 enable: all
 #  disable or enable the sensor after power on.
