@@ -2,11 +2,130 @@ import logging
 import math
 import statistics
 import serial
+import serial.tools.list_ports
 import os
+import time
 
 
 from . import bus
 from . import filament_switch_sensor
+
+
+# --- USB Auto-detection helpers ---
+
+# Version strings returned by 'G00;' / 'V;':
+#   bdwidth    -> pandapi3dV1  (capital V)
+#   bdpressure -> pandapi3dv1  (lowercase v)
+# We match on 'pandapi3dV' (capital V, case-sensitive) to identify bdwidth.
+BDWIDTH_BAUD = 500000
+BDWIDTH_VERSION_MARKER = 'pandapi3dV'   # capital V  = bdwidth
+
+# CH340/CH341 USB-serial chips  vendor ID 1A86 (QinHeng Electronics)
+CH340_VID = 0x1A86
+CH340_KEYWORDS = ('ch340', 'ch341', '1a86', 'qinheng')
+
+
+def _list_all_serial_ports():
+    return [p.device for p in serial.tools.list_ports.comports()]
+
+
+def _list_ch340_ports():
+    found = set()
+
+    # --- Methods 1 & 2: pyserial comports() ---
+    for p in serial.tools.list_ports.comports():
+        vid = getattr(p, 'vid', None)
+        desc = (p.description or '').lower()
+        hwid = (p.hwid or '').lower()
+        if vid == CH340_VID:
+            found.add(p.device)
+            continue
+        if any(k in desc or k in hwid for k in CH340_KEYWORDS):
+            found.add(p.device)
+
+    # --- Method 3: /dev/serial/by-id/ symlink scan ---
+    by_id_dir = '/dev/serial/by-id'
+    if os.path.isdir(by_id_dir):
+        for name in os.listdir(by_id_dir):
+            if any(k in name.lower() for k in CH340_KEYWORDS):
+                symlink = os.path.join(by_id_dir, name)
+                try:
+                    real = os.path.realpath(symlink)
+                    found.add(real)
+                    logging.info(
+                        "bdwidth auto-detect: found CH340 via by-id: %s -> %s" % (name, real)
+                    )
+                except Exception:
+                    pass
+
+    return list(found)
+
+
+def _probe_port_for_bdwidth(port):
+    ser = None
+    try:
+        ser = serial.Serial(port, BDWIDTH_BAUD, timeout=0.6)
+        time.sleep(0.2)
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
+
+        ser.write(b'G00;\n')
+        line = ser.readline()
+        text = line.decode('utf-8', errors='ignore').strip()
+        logging.info(
+            "bdwidth auto-detect: port=%s baud=%d cmd='G00;' response=%r"
+            % (port, BDWIDTH_BAUD, text)
+        )
+        ser.close()
+        # Capital V = bdwidth; lowercase v = bdpressure
+        if BDWIDTH_VERSION_MARKER in text:
+            return port, text
+
+    except Exception as e:
+        logging.warning("bdwidth auto-detect: error probing %s at %d baud: %s"
+                        % (port, BDWIDTH_BAUD, e))
+        if ser is not None:
+            try:
+                ser.close()
+            except Exception:
+                pass
+    return port, None
+
+
+def auto_detect_bdwidth_port():
+    # --- Pass 1: CH340-labelled ports ---
+    ch340_ports = _list_ch340_ports()
+    logging.info("bdwidth auto-detect: CH340 candidates = %s" % ch340_ports)
+    for port in ch340_ports:
+        matched_port, resp = _probe_port_for_bdwidth(port)
+        if resp is not None:
+            logging.info(
+                "bdwidth auto-detect: found BDWidth on %s (version: %r)" % (matched_port, resp)
+            )
+            return matched_port
+
+    # --- Pass 2: all serial ports (fallback) ---
+    all_ports = _list_all_serial_ports()
+    # skip ports we already tried
+    remaining = [p for p in all_ports if p not in ch340_ports]
+    logging.info(
+        "bdwidth auto-detect: CH340 pass found nothing; "
+        "trying remaining ports: %s" % remaining
+    )
+    for port in remaining:
+        matched_port, resp = _probe_port_for_bdwidth(port)
+        if resp is not None:
+            logging.info(
+                "bdwidth auto-detect: found BDWidth on %s (version: %r)" % (matched_port, resp)
+            )
+            return matched_port
+
+    logging.warning(
+        "bdwidth auto-detect: BDWidth not found. "
+        "Probed CH340=%s + fallback=%s. "
+        "Check klippy.log for per-port responses." % (ch340_ports, remaining)
+    )
+    return None
 
 
 BDWIDTH_CHIP_ADDR = 3
@@ -27,9 +146,22 @@ class BDWidthMotionSensor:
         if "i2c" in self.port:  
             self.i2c = bus.MCU_I2C_from_config(config, BDWIDTH_CHIP_ADDR, BDWIDTH_I2C_SPEED)
         elif "usb" in self.port:
-            self.usb_port = config.get("serial")
             baudrate = 500000
-            self.usb = serial.Serial(self.usb_port, baudrate,timeout=1)
+            configured_serial = config.get("serial", None)
+            if configured_serial is None or configured_serial.strip().lower() == "auto":
+                # Auto-detect: scan CH340 ports and identify BDWidth by baud rate (500000)
+                usb_port = auto_detect_bdwidth_port()
+                if usb_port is None:
+                    raise config.error(
+                        "BDWidthMotionSensor: could not auto-detect USB port. "
+                        "No CH340 device responded at 500000 baud. "
+                        "Set 'serial' explicitly in the config if auto-detection fails."
+                    )
+                logging.info("BDWidthMotionSensor: using auto-detected port %s" % usb_port)
+            else:
+                usb_port = configured_serial
+            self.usb_port = usb_port
+            self.usb = serial.Serial(self.usb_port, baudrate, timeout=1)
         self.gcode = self.printer.lookup_object('gcode')
         self.extruder_name = config.get('extruder')
         self.check_on_print_start = config.getboolean(
@@ -81,7 +213,7 @@ class BDWidthMotionSensor:
             #                                     encoding='utf-8', mode='a+')],
            #         format="%(asctime)s  %(message)s", 
            #         datefmt="%F %A %T", 
-           #         level=logging.INFO)
+           #         level=print)
             self.logerb=self.get_logger(self.get_log_path()+"bdwidth_"+self.bd_name+".log.csv")
                     
 
@@ -376,13 +508,14 @@ class BDWidthMotionSensor:
     
             
     def cmd_query(self, gcmd):
-        response = ""
-        if "usb" == self.port:
-            self.usb.write('G00;'.encode())
-            response += self.usb.readline().decode('ascii').strip()
-        elif "i2c" == self.port: 
-            response += self.read_register('_version', 15).decode('utf-8')
-           
+        # response = ""
+        # if "usb" == self.port:
+        #     self.usb.write('G00;'.encode())
+        #     response += self.usb.readline().decode('ascii').strip()
+        # elif "i2c" == self.port: 
+        #     response += self.read_register('_version', 15).decode('utf-8')
+        eventtime = self.reactor.monotonic()
+        self.extrude_factor_update_event(eventtime)   
         
       #  if self.lastFilamentWidthReading > 0:
       #      response += (" Filament dia (measured mm): "
