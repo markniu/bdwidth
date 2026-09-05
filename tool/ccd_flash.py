@@ -250,6 +250,22 @@ class CCDViewerGUI:
         self.data_lock = threading.Lock()
         self.frame_count = 0
 
+        # Rolling save of the most recent frames as CSV.  One row per
+        # frame: the first column is the frame number and the remaining
+        # columns are that frame's pixel values, so every frame stays
+        # distinguishable in the file.
+        self.recent_frames = []
+        self.recent_max_frames = 200
+        self.last_csv_save = 0.0
+        self.csv_save_interval = 1.0
+        # With PyInstaller --onefile, __file__ points into the unpacked
+        # temp bundle, so use the exe's own folder when frozen.
+        if getattr(sys, "frozen", False):
+            base_dir = os.path.dirname(os.path.abspath(sys.executable))
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.csv_path = os.path.join(base_dir, "ccd_recent_200.csv")
+
         self.firmware_path = None
         self.firmware_data = None
         self.start_addr = 0x08000000
@@ -374,6 +390,8 @@ class CCDViewerGUI:
 
     def disconnect(self):
         self.is_running = False
+        # Flush the latest frames to CSV before stopping.
+        self.save_recent_csv()
         if self.serial_connection:
             try:
                 self.serial_connection.close()
@@ -575,7 +593,22 @@ class CCDViewerGUI:
                                     nums.append(0)
                                     with self.data_lock:
                                         self.data_queue.append(nums)
-                                    self.frame_count += 1
+                                        self.frame_count += 1
+                                        # Keep the trailing 0 only for the
+                                        # plot ylim; save clean sensor data.
+                                        values = nums[:-1]
+                                        self.recent_frames.append(
+                                            (self.frame_count, values)
+                                        )
+                                        if len(self.recent_frames) > self.recent_max_frames:
+                                            del self.recent_frames[
+                                                :len(self.recent_frames)
+                                                - self.recent_max_frames
+                                            ]
+                                    now = time.time()
+                                    if now - self.last_csv_save >= self.csv_save_interval:
+                                        self.last_csv_save = now
+                                        self.save_recent_csv()
                                 buffer.clear()
                 else:
                     time.sleep(0.01)
@@ -602,8 +635,27 @@ class CCDViewerGUI:
         self.ax_plot.set_ylim(0, ymax * 1.1)
         self.canvas.draw_idle()
 
+    def save_recent_csv(self):
+        """Write the most recent frames to CSV (overwrite).
+
+        One row per frame: frame number first, then the pixel values of
+        that frame.  The file always holds the latest
+        `self.recent_max_frames` frames.
+        """
+        try:
+            with self.data_lock:
+                rows = [
+                    ",".join([str(index)] + [str(v) for v in values])
+                    for index, values in self.recent_frames
+                ]
+            with open(self.csv_path, "w", encoding="ascii", newline="") as fh:
+                fh.write("\n".join(rows) + "\n")
+        except Exception as e:
+            print(f"CSV save error: {e}")
+
     def on_closing(self):
         self.is_running = False
+        self.save_recent_csv()
         if self.serial_connection:
             try:
                 self.serial_connection.close()
