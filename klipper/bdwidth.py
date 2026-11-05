@@ -1,6 +1,7 @@
 import logging
 import math
 import statistics
+import inspect
 import serial
 import serial.tools.list_ports
 import os
@@ -166,11 +167,18 @@ class BDWidthMotionSensor:
         self.extruder_name = config.get('extruder')
         self.check_on_print_start = config.getboolean(
             "check_on_print_start", False)
-        try: 
+        try:
             self.runout_helper = filament_switch_sensor.RunoutHelper(config)
         except Exception as e:
             self.runout_helper = filament_switch_sensor.RunoutHelper(config,self)
         self.get_status = self.runout_helper.get_status
+        # Klipper changed note_filament_present() from (present) to
+        # (eventtime, present); detect which variant is installed once.
+        try:
+            self._note_present_args = len(inspect.signature(
+                self.runout_helper.note_filament_present).parameters)
+        except (TypeError, ValueError):
+            self._note_present_args = 2
         self.extruder = None
         self.estimated_print_time = None
         # Initialise internal state
@@ -351,25 +359,13 @@ class BDWidthMotionSensor:
 
 
     def width_process(self,eventtime,last_epos):
-    # width process Update extrude factor      
-        # Check runout
-        try:
-            self.runout_helper.note_filament_present(eventtime, True)
-        except Exception as e:
-            self.runout_helper.note_filament_present(True)
-            pass
-        
+    # width process Update extrude factor
         # Does filament exists
-       # if self.is_debug == True:
-        #    self.gcode.respond_info(" width:%.4fmm, pending_position:%f,last_epos:%f" % (self.lastFilamentWidthReading,self.filament_array[0][0],last_epos))
-        if self.lastFilamentWidthReading >= self.min_diameter and self.lastFilamentWidthReading <= self.max_diameter:
+        filament_present = (self.lastFilamentWidthReading >= self.min_diameter
+                            and self.lastFilamentWidthReading <= self.max_diameter)
+        if filament_present:
             self.filament_present = True
             self.width_out_count = 0
-            try:
-                self.runout_helper.note_filament_present(eventtime, True)
-            except Exception as e:
-                self.runout_helper.note_filament_present(True)
-                pass
             if len(self.filament_array) > 0:
                 # Get first position in filament array
                 pending_position = self.filament_array[0][0]
@@ -389,67 +385,65 @@ class BDWidthMotionSensor:
         else:
             self.width_out_count=self.width_out_count+1
             if self.width_out_count < self.tolerance_count:
-                return
+                # Don't flap on a single bad reading; keep the last state
+                return self.filament_present
             if self.filament_present == True:
                 self.gcode.respond_info("%s:filament width is out of range: %0.3fmm [%0.3f,%0.3f]!!! pause"%(self.bd_name,self.lastFilamentWidthReading,
                                                                        self.min_diameter,self.max_diameter))
-                self.filament_present = False                                                       
-            #self.runout_helper.note_filament_present(eventtime, False)
-            try:
-                self.runout_helper.note_filament_present(eventtime, False)
-            except Exception as e:
-                self.runout_helper.note_filament_present(False)
-                pass
-            
+            self.filament_present = False
             self.gcode.run_script("M221 S100")
             self.filament_array = []
+        return filament_present
 
     def motion_process(self,eventtime):
          # motion process
         if self.lastMotionReading!=0:
-         #   self.gcode.respond_info("port:%s, width:%.3f mm (%d),motion:%d" % (self.port,self.lastFilamentWidthReading,
-         #                                    self.raw_width,self.lastMotionReading))
             self._update_filament_runout_pos(eventtime)
             self.runout_count = 0
-        else:
-            
-            extruder_pos = self._get_extruder_pos(eventtime)
-            #self.gcode.respond_info("epos:%0.1f filament_runout_pos:%0.1f,actual_total_move:%d" % (extruder_pos, 
-            #                            self.filament_runout_pos,self.actual_total_move))
-            # Check for filament runout
-            if extruder_pos > (self.filament_runout_pos-5):
-                self.runout_count = self.runout_count+1
-                if self.runout_count < self.tolerance_count:
-                    return
-                self.gcode.respond_info("Rounout: because extruder_postion:%0.1f > filament_runout_pos:%0.1f, (actual_total_move:%d)" % (extruder_pos, 
-                                            self.filament_runout_pos,self.actual_total_move))
-                self.gcode.respond_info("If the trigger is incorrect, you can increase the runout_delay_length or check the flow rate in the gcode file")
-               # self.runout_helper.note_filament_present(eventtime, False)
-                try:
-                    self.runout_helper.note_filament_present(eventtime, False)
-                except Exception as e:
-                    self.runout_helper.note_filament_present(False)
-                    pass
-                self._update_filament_runout_pos(eventtime) 
-            
-          #  self._update_filament_runout_pos(eventtime)  
+            return True
+
+        extruder_pos = self._get_extruder_pos(eventtime)
+        #self.gcode.respond_info("epos:%0.1f filament_runout_pos:%0.1f,actual_total_move:%d" % (extruder_pos,
+        #                            self.filament_runout_pos,self.actual_total_move))
+        # Check for filament runout
+        if extruder_pos > (self.filament_runout_pos-5):
+            self.runout_count = self.runout_count+1
+            if self.runout_count < self.tolerance_count:
+                return True
+            self.gcode.respond_info("Rounout: because extruder_postion:%0.1f > filament_runout_pos:%0.1f, (actual_total_move:%d)" % (extruder_pos,
+                                        self.filament_runout_pos,self.actual_total_move))
+            self.gcode.respond_info("If the trigger is incorrect, you can increase the runout_delay_length or check the flow rate in the gcode file")
+            self._update_filament_runout_pos(eventtime)
+            return False
+        return True
+
+          #  self._update_filament_runout_pos(eventtime)
 
     
-    def extrude_factor_update_event(self, eventtime):
-        if 'disable' in self.is_active:     
-            return eventtime + self.sample_time
-            
-        if self.Read_bdwidth() == True:
-            last_epos = self.toolhead.get_position()[3]
-            # Update filament array for lastFilamentWidthReading
-            self.update_filament_array(last_epos)
-            if 'width' in self.is_active or 'all' in self.is_active:
-                self.width_process(eventtime,last_epos)
-            if 'motion' in self.is_active or 'all' in self.is_active:    
-                self.motion_process(eventtime) 
-           
+    def _note_filament_present(self, eventtime, present):
+        if self._note_present_args == 1:
+            self.runout_helper.note_filament_present(present)
         else:
+            self.runout_helper.note_filament_present(eventtime, present)
+
+    def extrude_factor_update_event(self, eventtime):
+        if 'disable' in self.is_active:
+            return eventtime + self.sample_time
+
+        if self.Read_bdwidth() != True:
             return eventtime + 10
+
+        last_epos = self.toolhead.get_position()[3]
+        # Update filament array for lastFilamentWidthReading
+        self.update_filament_array(last_epos)
+        present = True
+        if 'width' in self.is_active or 'all' in self.is_active:
+            present = self.width_process(eventtime,last_epos)
+        if 'motion' in self.is_active or 'all' in self.is_active:
+            present = self.motion_process(eventtime) and present
+        # Tell the runout helper once per sample, so it sees one consistent
+        # state transition. This is what triggers pause_on_runout/runout_gcode.
+        self._note_filament_present(eventtime, present)
 
         return eventtime + self.sample_time
 
@@ -568,7 +562,7 @@ class BDWidthMotionSensor:
         }      
         
     def get_status(self, eventtime):
-        return {'Diameter': self.self.lastFilamentWidthReading,
+        return {'Diameter': self.lastFilamentWidthReading,
                 'Raw':self.raw_width,
                 'Motion':self.lastMotionReading,
                 'active':self.is_active}
